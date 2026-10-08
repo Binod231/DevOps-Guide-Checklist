@@ -1,0 +1,266 @@
+@import 'tailwindcss';
+
+/* Class-based dark mode rather than OS-driven, so the header toggle controls it. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Semantic design tokens. Declared as CSS custom properties so the dark theme
+ * can reassign them without components needing dark: variants for every colour.
+ * Contrast ratios against their intended backgrounds are noted where they
+ * matter for the 4.5:1 minimum.
+ */
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --portal-canvas: #f8f9fa;
+  --portal-surface: #ffffff;
+  --portal-surface-sunken: #f1f3f6;
+  --portal-surface-accent: #eaf0f8;
+
+  /* Text — 17.4:1, 15.9:1, 6.4:1 on --portal-surface */
+  --portal-text: #0f172a;
+  --portal-text-secondary: #1a2332;
+  --portal-text-muted: #51607a;
+  --portal-text-inverse: #ffffff;
+
+  /* Accent — 8.3:1 on white */
+  --portal-accent: #1f4e8c;
+  --portal-accent-hover: #173d6f;
+  --portal-accent-subtle: #eaf0f8;
+  --portal-accent-border: #a9c0dd;
+
+  /* Borders */
+  --portal-border: #d4d9e0;
+  --portal-border-strong: #aab3c0;
+
+  /* Priority — 8.2:1, 7.4:1, 7.6:1 on white */
+  --portal-p0: #9b1c1c;
+  --portal-p0-surface: #fdf2f2;
+  --portal-p1: #92400e;
+  --portal-p1-surface: #fdf6ec;
+  --portal-p2: #475569;
+  --portal-p2-surface: #f1f3f6;
+
+  /* Status */
+  --portal-status-neutral: #51607a;
+  --portal-status-neutral-surface: #f1f3f6;
+  --portal-status-active: #1f4e8c;
+  --portal-status-active-surface: #eaf0f8;
+  --portal-status-done: #1b5e3f;
+  --portal-status-done-surface: #edf6f1;
+
+  /* Stage */
+  --portal-stage-all: #1f4e8c;
+  --portal-stage-optional: #51607a;
+
+  --portal-focus: #1f4e8c;
+
+  /* Typography */
+  --portal-font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  --portal-font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --portal-measure: 72ch;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --portal-canvas: #0b1220;
+  --portal-surface: #111a2b;
+  --portal-surface-sunken: #0d1524;
+  --portal-surface-accent: #16253d;
+
+  /* 14.8:1, 13.1:1, 6.9:1 on --portal-surface */
+  --portal-text: #e8edf5;
+  --portal-text-secondary: #dce4f0;
+  --portal-text-muted: #a2b2c9;
+  --portal-text-inverse: #0b1220;
+
+  /* 7.1:1 on --portal-surface */
+  --portal-accent: #7aa8e0;
+  --portal-accent-hover: #9cc0ec;
+  --portal-accent-subtle: #16253d;
+  --portal-accent-border: #2f4a70;
+
+  --portal-border: #27344a;
+  --portal-border-strong: #3d4d68;
+
+  --portal-p0: #f09a9a;
+  --portal-p0-surface: #2c1618;
+  --portal-p1: #e3b074;
+  --portal-p1-surface: #2a1f12;
+  --portal-p2: #a8b8cf;
+  --portal-p2-surface: #1a2335;
+
+  --portal-status-neutral: #a2b2c9;
+  --portal-status-neutral-surface: #1a2335;
+  --portal-status-active: #7aa8e0;
+  --portal-status-active-surface: #16253d;
+  --portal-status-done: #74c79c;
+  --portal-status-done-surface: #132619;
+
+  --portal-stage-all: #7aa8e0;
+  --portal-stage-optional: #a2b2c9;
+
+  --portal-focus: #7aa8e0;
+}
+
+/* Expose the tokens to Tailwind utilities. `inline` keeps the var() reference
+   intact so the .dark reassignment above takes effect at runtime. */
+@theme inline {
+  --color-canvas: var(--portal-canvas);
+  --color-surface: var(--portal-surface);
+  --color-sunken: var(--portal-surface-sunken);
+  --color-surface-accent: var(--portal-surface-accent);
+
+  --color-ink: var(--portal-text);
+  --color-ink-secondary: var(--portal-text-secondary);
+  --color-ink-muted: var(--portal-text-muted);
+  --color-ink-inverse: var(--portal-text-inverse);
+
+  --color-accent: var(--portal-accent);
+  --color-accent-hover: var(--portal-accent-hover);
+  --color-accent-subtle: var(--portal-accent-subtle);
+  --color-accent-border: var(--portal-accent-border);
+
+  --color-edge: var(--portal-border);
+  --color-edge-strong: var(--portal-border-strong);
+
+  --color-p0: var(--portal-p0);
+  --color-p0-surface: var(--portal-p0-surface);
+  --color-p1: var(--portal-p1);
+  --color-p1-surface: var(--portal-p1-surface);
+  --color-p2: var(--portal-p2);
+  --color-p2-surface: var(--portal-p2-surface);
+
+  --color-status-neutral: var(--portal-status-neutral);
+  --color-status-neutral-surface: var(--portal-status-neutral-surface);
+  --color-status-active: var(--portal-status-active);
+  --color-status-active-surface: var(--portal-status-active-surface);
+  --color-status-done: var(--portal-status-done);
+  --color-status-done-surface: var(--portal-status-done-surface);
+
+  --color-stage-all: var(--portal-stage-all);
+  --color-stage-optional: var(--portal-stage-optional);
+
+  --font-sans: var(--portal-font-sans);
+  --font-mono: var(--portal-font-mono);
+
+  /* Deliberately conservative radii — this is a documentation portal, not a
+     consumer product. */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+}
+
+@layer base {
+  html {
+    /* 16px base */
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--portal-canvas);
+    color: var(--portal-text);
+    font-family: var(--portal-font-sans);
+    line-height: 1.65;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Headings carry their own tighter leading; body copy keeps 1.65. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    line-height: 1.3;
+    font-weight: 600;
+    color: var(--portal-text);
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--portal-font-mono);
+    font-size: 0.9375em;
+  }
+
+  /* Visible 2px focus ring on every interactive element. */
+  :focus-visible {
+    outline: 2px solid var(--portal-focus);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Honour reduced-motion. There is very little motion to begin with. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Anchor-linked practices should not land underneath the sticky header. */
+  [id] {
+    scroll-margin-top: 5.5rem;
+  }
+}
+
+@layer components {
+  /* Constrained measure for long-form document prose. */
+  .portal-measure {
+    max-width: var(--portal-measure);
+  }
+
+  /* Comfortable touch targets for checkboxes without inflating their visual
+     weight. The box stays 1rem; the hit area grows on touch devices. */
+  @media (pointer: coarse) {
+    input[type='checkbox'] {
+      min-width: 1.25rem;
+      min-height: 1.25rem;
+    }
+
+    label {
+      padding-block: 0.125rem;
+    }
+  }
+
+  /* Inline code as it appears in the source documents. There are no fenced
+     code blocks anywhere in the sources, so there is no block variant. */
+  .portal-code {
+    background-color: var(--portal-surface-sunken);
+    border: 1px solid var(--portal-border);
+    border-radius: 2px;
+    padding: 0.075em 0.3em;
+    color: var(--portal-text-secondary);
+    white-space: nowrap;
+  }
+
+  .portal-skip-link {
+    position: absolute;
+    left: 0.5rem;
+    top: -4rem;
+    z-index: 100;
+    background-color: var(--portal-accent);
+    color: var(--portal-text-inverse);
+    padding: 0.625rem 1rem;
+    font-weight: 600;
+    transition: top 120ms ease-out;
+  }
+
+  .portal-skip-link:focus {
+    top: 0.5rem;
+  }
+}
