@@ -443,3 +443,96 @@ export function computeProgress(
     percent: total === 0 ? 0 : Math.round((completed / total) * 100),
   };
 }
+
+/** Merges local state with incoming cloud store state without data loss. */
+export function mergeStates(local: PortalState, incoming: PortalState): PortalState {
+  const merged: PortalState = {
+    version: STATE_VERSION,
+    checked: { ...incoming.checked, ...local.checked },
+    tracker: { ...incoming.tracker },
+    notes: { ...incoming.notes, ...local.notes },
+    links: { ...incoming.links, ...local.links },
+    openIssues: { ...incoming.openIssues, ...local.openIssues },
+  };
+
+  for (const [k, v] of Object.entries(local.tracker)) {
+    merged.tracker[k] = { ...(merged.tracker[k] ?? {}), ...v };
+  }
+
+  // Custom Rows: deduplicate by rowKey
+  const rowMap = new Map<string, TrackerRow>();
+  for (const r of incoming.customRows ?? []) rowMap.set(r.rowKey, r);
+  for (const r of local.customRows ?? []) rowMap.set(r.rowKey, r);
+  merged.customRows = Array.from(rowMap.values());
+
+  merged.deletedRowKeys = {
+    ...(incoming.deletedRowKeys ?? {}),
+    ...(local.deletedRowKeys ?? {}),
+  };
+
+  merged.rowOverrides = {
+    ...(incoming.rowOverrides ?? {}),
+    ...(local.rowOverrides ?? {}),
+  };
+
+  // Custom Practices: deduplicate by id
+  const practiceMap = new Map<string, Practice>();
+  for (const p of incoming.customPractices ?? []) practiceMap.set(p.id, p);
+  for (const p of local.customPractices ?? []) practiceMap.set(p.id, p);
+  merged.customPractices = Array.from(practiceMap.values());
+
+  merged.deletedPracticeIds = {
+    ...(incoming.deletedPracticeIds ?? {}),
+    ...(local.deletedPracticeIds ?? {}),
+  };
+
+  merged.practiceOverrides = {
+    ...(incoming.practiceOverrides ?? {}),
+    ...(local.practiceOverrides ?? {}),
+  };
+
+  // Custom Checklist Items (Record<string, ChecklistItem[]>)
+  merged.customChecklistItems = { ...(incoming.customChecklistItems ?? {}) };
+  for (const [key, items] of Object.entries(local.customChecklistItems ?? {})) {
+    const existing = merged.customChecklistItems[key] ?? [];
+    const itemMap = new Map<string, ChecklistItem>();
+    for (const item of existing) itemMap.set(item.id, item);
+    for (const item of items) itemMap.set(item.id, item);
+    merged.customChecklistItems[key] = Array.from(itemMap.values());
+  }
+
+  merged.deletedChecklistItemIds = {
+    ...(incoming.deletedChecklistItemIds ?? {}),
+    ...(local.deletedChecklistItemIds ?? {}),
+  };
+
+  merged.checklistItemOverrides = {
+    ...(incoming.checklistItemOverrides ?? {}),
+    ...(local.checklistItemOverrides ?? {}),
+  };
+
+  // Custom Open Issues
+  const openIssueMap = new Map<string, ChecklistItem>();
+  for (const i of incoming.customOpenIssues ?? []) openIssueMap.set(i.id, i);
+  for (const i of local.customOpenIssues ?? []) openIssueMap.set(i.id, i);
+  merged.customOpenIssues = Array.from(openIssueMap.values());
+
+  merged.deletedOpenIssueIds = {
+    ...(incoming.deletedOpenIssueIds ?? {}),
+    ...(local.deletedOpenIssueIds ?? {}),
+  };
+
+  // Acknowledgements & Verifications
+  merged.checklistAcknowledgements = {
+    ...(incoming.checklistAcknowledgements ?? {}),
+    ...(local.checklistAcknowledgements ?? {}),
+  };
+
+  merged.checklistVerifications = {
+    ...(incoming.checklistVerifications ?? {}),
+    ...(local.checklistVerifications ?? {}),
+  };
+
+  return merged;
+}
+

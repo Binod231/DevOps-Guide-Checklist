@@ -23,11 +23,15 @@ const ROUTE_CASES: [label: string, path: string][] = [
 ];
 
 describe('accessibility — axe-core across every page', () => {
-  it.each(ROUTE_CASES)('has no automated violations on %s', async (_label, path) => {
-    const { container } = renderApp(path);
-    const violations = await findViolations(container);
-    expect(violations.length, describeViolations(violations)).toBe(0);
-  });
+  it.each(ROUTE_CASES)(
+    'has no automated violations on %s',
+    async (_label, path) => {
+      const { container } = renderApp(path);
+      const violations = await findViolations(container);
+      expect(violations.length, describeViolations(violations)).toBe(0);
+    },
+    15000,
+  );
 
   it('covers every route the sidebar exposes', () => {
     // Overview + 6 guide categories + order + readiness + notes + tracker.

@@ -13,6 +13,8 @@ import {
   emptyState,
   loadState,
   saveState,
+  mergeStates,
+  sanitiseState,
   type PortalState,
   type Progress,
   type TrackerRowState,
@@ -81,6 +83,11 @@ interface PortalStateContextValue {
   verifyTrackerRow: (rowKey: string, verifiedBy?: string) => void;
   unverifyTrackerRow: (rowKey: string) => void;
   verifyAllPending: (verifiedBy?: string) => void;
+
+  /** Central Cloud Store (AWS S3) Sync */
+  syncFromCloudStore: () => Promise<{ success: boolean; message?: string }>;
+  isCloudSyncing: boolean;
+  cloudSyncNotice: string | null;
 }
 
 const PortalStateContext = createContext<PortalStateContextValue | null>(null);
@@ -89,7 +96,26 @@ const EMPTY_ROW: TrackerRowState = Object.freeze({});
 
 export function PortalStateProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<PortalState>(() => loadState());
+  const [isCloudSyncing, setIsCloudSyncing] = useState(false);
+  const [cloudSyncNotice, setCloudSyncNotice] = useState<string | null>(null);
   const firstRender = useRef(true);
+
+  // Auto-hydrate from central cloud store on initial mount (in browser)
+  useEffect(() => {
+    if (import.meta.env.MODE === 'test') return;
+
+    fetch('/data/portal-state.json', { cache: 'no-cache' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (json && typeof json === 'object') {
+          const parsed = json.state && typeof json.state === 'object' ? json.state : json;
+          setState((cur) => mergeStates(cur, sanitiseState(parsed)));
+        }
+      })
+      .catch(() => {
+        // Cloud store unreachable or offline; continue with local storage
+      });
+  }, []);
 
   // Persist on change, but not on mount: writing the just-loaded value back
   // would be a pointless round trip.
@@ -100,6 +126,45 @@ export function PortalStateProvider({ children }: { children: ReactNode }) {
     }
     saveState(state);
   }, [state]);
+
+  const syncFromCloudStore = useCallback(async (): Promise<{ success: boolean; message?: string }> => {
+    setIsCloudSyncing(true);
+    try {
+      const endpoints = [
+        '/data/portal-state.json',
+        `${import.meta.env.VITE_S3_WEBSITE_URL || ''}/data/portal-state.json`,
+      ];
+      let loadedJson: unknown = null;
+      for (const ep of endpoints) {
+        if (!ep) continue;
+        try {
+          const res = await fetch(ep, { cache: 'no-cache' });
+          if (res.ok) {
+            loadedJson = await res.json();
+            break;
+          }
+        } catch {
+          // try next endpoint
+        }
+      }
+
+      if (loadedJson && typeof loadedJson === 'object') {
+        const rawObj = loadedJson as Record<string, unknown>;
+        const parsed = rawObj.state && typeof rawObj.state === 'object' ? rawObj.state : rawObj;
+        const validState = sanitiseState(parsed);
+        setState((cur) => mergeStates(cur, validState));
+        setCloudSyncNotice('Synchronized with AWS Cloud Store!');
+        setTimeout(() => setCloudSyncNotice(null), 3000);
+        return { success: true, message: 'Synchronized with AWS Cloud Store!' };
+      }
+      return { success: false, message: 'Could not fetch cloud state from S3 endpoint.' };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error syncing from cloud store';
+      return { success: false, message: msg };
+    } finally {
+      setIsCloudSyncing(false);
+    }
+  }, []);
 
   const setChecked = useCallback((id: string, checked: boolean, defaultCompletedBy?: string) => {
     setState((current) => {
@@ -668,6 +733,9 @@ export function PortalStateProvider({ children }: { children: ReactNode }) {
       verifyTrackerRow,
       unverifyTrackerRow,
       verifyAllPending,
+      syncFromCloudStore,
+      isCloudSyncing,
+      cloudSyncNotice,
     }),
     [
       state,
@@ -706,6 +774,9 @@ export function PortalStateProvider({ children }: { children: ReactNode }) {
       verifyTrackerRow,
       unverifyTrackerRow,
       verifyAllPending,
+      syncFromCloudStore,
+      isCloudSyncing,
+      cloudSyncNotice,
     ],
   );
 

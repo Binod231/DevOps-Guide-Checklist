@@ -57,7 +57,7 @@ type Feedback =
  * the spreadsheet or Notion database it came from.
  */
 export function ExportImportPanel() {
-  const { state, replaceState } = usePortalState();
+  const { state, replaceState, syncFromCloudStore, isCloudSyncing } = usePortalState();
   const { isAdmin } = useAuth();
   const [feedback, setFeedback] = useState<Feedback>({ kind: 'idle' });
   const [includeAdded, setIncludeAdded] = useState(false);
@@ -77,6 +77,15 @@ export function ExportImportPanel() {
       serialiseTrackerCsv(tracker, state.tracker, { includeAddedColumns: includeAdded }),
       'text/csv',
     );
+  };
+
+  const handleSyncCloud = async () => {
+    const res = await syncFromCloudStore();
+    setFeedback({
+      kind: res.success ? 'success' : 'error',
+      message: res.message || 'Synced from AWS Cloud Store.',
+      issues: [],
+    });
   };
 
   const onFile = async (file: File) => {
@@ -107,14 +116,17 @@ export function ExportImportPanel() {
   };
 
   return (
-    <section aria-labelledby="transfer-heading" className="border border-edge bg-surface">
-      <div className="border-b border-edge bg-sunken px-4 py-3">
+    <section aria-label="Export and import" className="border border-edge bg-surface">
+      <div className="border-b border-edge bg-sunken px-4 py-3 flex items-center justify-between">
         <h2
           id="transfer-heading"
           className="text-xs font-semibold uppercase tracking-wide text-ink-muted"
         >
           Export and import
         </h2>
+        <span className="text-[10px] uppercase font-bold text-accent bg-accent/10 px-2 py-0.5 border border-accent/20">
+          Cloud Store Sync
+        </span>
       </div>
 
       <div className="space-y-4 px-4 py-4">
@@ -142,6 +154,14 @@ export function ExportImportPanel() {
           >
             Import state (JSON)
           </button>
+          <button
+            type="button"
+            onClick={handleSyncCloud}
+            disabled={isCloudSyncing}
+            className="border border-accent/40 bg-accent-subtle px-3 py-1.5 text-sm font-semibold text-accent hover:bg-accent hover:text-white disabled:opacity-50 transition-colors"
+          >
+            {isCloudSyncing ? 'Syncing...' : 'Sync from AWS Cloud Store'}
+          </button>
           <input
             ref={fileInput}
             type="file"
@@ -155,6 +175,10 @@ export function ExportImportPanel() {
             }}
           />
         </div>
+
+        <p className="text-xs text-ink-muted">
+          <strong>Data Storage Architecture:</strong> Edits are saved locally in your browser storage and can be published to the AWS S3 Cloud Store (<code>/data/portal-state.json</code>) to share CRUD changes and verifications with all team members across devices.
+        </p>
 
         <div className="flex items-start gap-2">
           <input

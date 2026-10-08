@@ -4,8 +4,9 @@ import { useAuth } from '../state/authContext';
 import { usePortalState } from '../state/PortalStateProvider';
 import { guide, checklist, tracker, ROUTES } from '../content/registry';
 import { DEFAULT_COGNITO_CONFIG } from '../state/cognitoAuth';
+import { serialiseState } from '../state/transfer';
 
-type FilterTab = 'pending' | 'verified' | 'completed' | 'all' | 'users' | 'aws';
+type FilterTab = 'pending' | 'verified' | 'completed' | 'all' | 'users';
 type SectionFilter = 'all' | 'tracker' | 'guide' | 'order' | 'readiness' | 'notes';
 
 interface UnifiedDashboardItem {
@@ -39,6 +40,8 @@ export function AdminDashboardPage() {
   const { isAdmin, username, loginAsAdmin, createManagedUser } = useAuth();
   const {
     state,
+    syncFromCloudStore,
+    isCloudSyncing,
     allTrackerRows,
     trackerRowState,
     allCategoryPractices,
@@ -466,6 +469,27 @@ export function AdminDashboardPage() {
     setTimeout(() => setFeedbackNotice(null), 3000);
   };
 
+  const handlePublishToCloud = () => {
+    try {
+      const jsonStr = serialiseState(state);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'portal-state.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setFeedbackNotice(
+        'Downloaded portal-state.json! To sync directly to AWS S3, run "npm run sync-cloud" in terminal.',
+      );
+      setTimeout(() => setFeedbackNotice(null), 5000);
+    } catch (err) {
+      setFeedbackNotice(err instanceof Error ? err.message : 'Error exporting state');
+    }
+  };
+
   // Non-admin view: polite restriction with direct login box
   if (!isAdmin) {
     return (
@@ -556,12 +580,11 @@ export function AdminDashboardPage() {
             </h1>
             <p className="mt-1 text-sm text-ink-secondary">
               Review user checklist completions and acknowledgements across all guide practices,
-              phases, readiness criteria, and tracker rows. Verify sign-offs, manage Cognito users,
-              and view AWS deployment status.
+              phases, readiness criteria, and tracker rows. Verify sign-offs and manage Cognito users.
             </p>
           </div>
 
-          {pendingCount > 0 && activeTab !== 'users' && activeTab !== 'aws' && (
+          {pendingCount > 0 && activeTab !== 'users' && (
             <div className="shrink-0">
               <button
                 type="button"
@@ -594,6 +617,46 @@ export function AdminDashboardPage() {
           </button>
         </div>
       )}
+
+      {/* Central Cloud Store & Cross-Device Sync Banner */}
+      <div className="mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 rounded border border-edge bg-surface p-3.5 text-xs shadow-2xs">
+        <div className="flex items-start gap-2.5">
+          <div className="mt-0.5 rounded-full p-1 bg-accent/10 text-accent shrink-0">
+            <svg className="size-4" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M5.5 16a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 16h-8z" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-semibold text-ink">
+              Central Store Service: AWS S3 Cloud Store (<code className="font-mono text-[11px] text-accent">/data/portal-state.json</code>)
+            </p>
+            <p className="text-ink-secondary text-[11px] mt-0.5">
+              Edits made in this browser are auto-persisted locally. Sync or publish with AWS S3 so normal users and contributors on other devices immediately see all admin CRUD changes and verifications.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={async () => {
+              const res = await syncFromCloudStore();
+              setFeedbackNotice(res.message || 'Synced from Cloud Store');
+            }}
+            disabled={isCloudSyncing}
+            className="border border-edge bg-canvas px-3 py-1.5 text-xs font-medium text-ink hover:bg-sunken disabled:opacity-50 transition-colors"
+          >
+            {isCloudSyncing ? 'Syncing...' : 'Sync from Cloud Store'}
+          </button>
+          <button
+            type="button"
+            onClick={handlePublishToCloud}
+            className="border border-accent bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors"
+          >
+            Publish State to Cloud
+          </button>
+        </div>
+      </div>
 
       {/* Overview Metric Cards */}
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -732,22 +795,6 @@ export function AdminDashboardPage() {
             <span>Cognito User Management</span>
             <span className="rounded-full bg-accent-subtle px-1.5 py-0.2 text-[10px] text-accent font-bold">
               {managedUsers.length}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('aws')}
-            className={[
-              'flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold transition-colors',
-              activeTab === 'aws'
-                ? 'border-accent text-accent'
-                : 'border-transparent text-ink-secondary hover:text-ink',
-            ].join(' ')}
-          >
-            <span>AWS Deployment Status</span>
-            <span className="rounded-full bg-emerald-100 dark:bg-emerald-900/50 px-1.5 py-0.2 text-[10px] text-emerald-700 dark:text-emerald-300 font-bold">
-              Live
             </span>
           </button>
         </div>
@@ -1021,73 +1068,8 @@ export function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Tab: AWS Cloud Deployment Status */}
-      {activeTab === 'aws' && (
-        <div className="mt-6 space-y-6">
-          <div className="border border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 p-5 sm:p-6">
-            <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold">
-              <span className="flex size-3 rounded-full bg-emerald-500 animate-pulse" />
-              AWS Cloud Deployment Live
-            </div>
-            <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">
-              Your DevOps Implementation &amp; Readiness Portal is deployed and hosted on AWS infrastructure.
-            </p>
-
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-surface p-4 border border-edge rounded">
-              <div>
-                <p className="font-semibold text-ink">Live Portal URL (S3 Website):</p>
-                <a
-                  href={import.meta.env.VITE_S3_WEBSITE_URL || window.location.origin}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-accent underline font-mono text-[11px] break-all hover:text-accent-hover"
-                >
-                  {import.meta.env.VITE_S3_WEBSITE_URL || window.location.origin}
-                </a>
-              </div>
-
-              <div>
-                <p className="font-semibold text-ink">AWS Region &amp; Account:</p>
-                <p className="font-mono text-[11px] text-ink-secondary">
-                  {import.meta.env.VITE_AWS_REGION || DEFAULT_COGNITO_CONFIG.region} (Account: {import.meta.env.VITE_AWS_ACCOUNT_ID || 'Configured'})
-                </p>
-              </div>
-
-              <div>
-                <p className="font-semibold text-ink">Cognito User Pool ID:</p>
-                <p className="font-mono text-[11px] text-ink-secondary">
-                  {DEFAULT_COGNITO_CONFIG.userPoolId || 'Configured'}
-                </p>
-              </div>
-
-              <div>
-                <p className="font-semibold text-ink">Cognito Web Client ID:</p>
-                <p className="font-mono text-[11px] text-ink-secondary">
-                  {DEFAULT_COGNITO_CONFIG.clientId || 'Configured'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="border border-edge bg-surface p-5 sm:p-6">
-            <h3 className="text-sm font-bold text-ink">AWS CLI Management Reference</h3>
-            <p className="mt-1 text-xs text-ink-secondary">
-              You can also create and verify users directly from terminal using your configured AWS CLI:
-            </p>
-            <div className="mt-3 bg-canvas p-3 border border-edge font-mono text-[11px] text-ink overflow-x-auto space-y-2">
-              <p className="text-ink-muted"># 1. Create a new user in Cognito:</p>
-              <p>aws cognito-idp admin-create-user --user-pool-id {DEFAULT_COGNITO_CONFIG.userPoolId || '&lt;pool-id&gt;'} --username &lt;username&gt; --user-attributes Name=email,Value=&lt;email&gt; Name=email_verified,Value=true --message-action SUPPRESS</p>
-              <p className="text-ink-muted mt-2"># 2. Set user permanent password:</p>
-              <p>aws cognito-idp admin-set-user-password --user-pool-id {DEFAULT_COGNITO_CONFIG.userPoolId || '&lt;pool-id&gt;'} --username &lt;username&gt; --password '&lt;password&gt;' --permanent</p>
-              <p className="text-ink-muted mt-2"># 3. Add to VerifiedUsers group:</p>
-              <p>aws cognito-idp admin-add-user-to-group --user-pool-id {DEFAULT_COGNITO_CONFIG.userPoolId || '&lt;pool-id&gt;'} --username &lt;username&gt; --group-name VerifiedUsers</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Control Bar: Filters & Search (Only on item listing tabs) */}
-      {activeTab !== 'users' && activeTab !== 'aws' && (
+      {activeTab !== 'users' && (
         <>
           <div className="mt-4 flex flex-col gap-3 rounded border border-edge bg-sunken/40 p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">

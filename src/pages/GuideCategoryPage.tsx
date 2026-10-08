@@ -18,7 +18,7 @@ import {
   trackerRowForPractice,
   trackerRowsForGuideCategory,
 } from '../content/registry';
-import type { GuideCategory, Practice } from '../content/types';
+import type { GuideCategory, Practice, TrackerRow } from '../content/types';
 import { displayTitle } from '../content/displayTitle';
 import { usePortalState } from '../state/PortalStateProvider';
 import { useAuth } from '../state/authContext';
@@ -39,6 +39,7 @@ export function GuideCategoryPage() {
   const category = categoryId ? categoryById.get(categoryId) : undefined;
   const {
     allCategoryPractices,
+    allTrackerRows,
     addPractice,
     updatePractice,
     deletePractice,
@@ -56,6 +57,11 @@ export function GuideCategoryPage() {
     [allCategoryPractices, category],
   );
 
+  const trackerRows = useMemo(() => {
+    if (!category) return [];
+    return allTrackerRows(trackerRowsForGuideCategory(category.id));
+  }, [allTrackerRows, category]);
+
   if (!category) {
     return <Navigate to={ROUTES.guideCategory(guide.categories[0]!.id)} replace />;
   }
@@ -64,8 +70,6 @@ export function GuideCategoryPage() {
   const previous = index > 0 ? guide.categories[index - 1] : undefined;
   const next = index < guide.categories.length - 1 ? guide.categories[index + 1] : undefined;
   const progress = progressForIds(practices.map((p) => p.id));
-
-  const trackerRows = trackerRowsForGuideCategory(category.id);
 
   const handleAddPractice = () => {
     setEditingPractice(null);
@@ -98,6 +102,7 @@ export function GuideCategoryPage() {
         <PracticeList
           category={category}
           practices={practices}
+          trackerRows={trackerRows}
           onEditPractice={isAdmin ? handleEditPractice : undefined}
           onDeletePractice={isAdmin ? handleDeletePractice : undefined}
         />
@@ -174,6 +179,7 @@ export function GuideCategoryPage() {
           <PracticeList
             category={category}
             practices={practices}
+            trackerRows={trackerRows}
             onEditPractice={isAdmin ? handleEditPractice : undefined}
             onDeletePractice={isAdmin ? handleDeletePractice : undefined}
           />
@@ -223,18 +229,23 @@ export function GuideCategoryPage() {
 function PracticeList({
   category,
   practices,
+  trackerRows,
   onEditPractice,
   onDeletePractice,
 }: {
   category: GuideCategory;
   practices: Practice[];
+  trackerRows: TrackerRow[];
   onEditPractice?: (practice: Practice) => void;
   onDeletePractice?: (practiceId: string) => void;
 }) {
   return (
     <section aria-label={`Practices in ${category.title}`} className="space-y-5">
       {practices.map((practice) => {
-        const row = trackerRowForPractice(practice.id);
+        const baseRow = trackerRowForPractice(practice.id);
+        const row = baseRow
+          ? (trackerRows.find((r) => r.rowKey === baseRow.rowKey) ?? baseRow)
+          : undefined;
         return (
           <PracticeEntry
             key={practice.id}

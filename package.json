@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "test": "npm run generate-content && vitest run",
     "test:watch": "vitest",
-    "typecheck": "npm run generate-content && tsc -b --noEmit"
+    "typecheck": "npm run generate-content && tsc -b --noEmit",
+    "sync-cloud": "node scripts/sync-cloud.mjs",
+    "deploy": "npm run build && aws s3 sync dist/ s3://devops-guide-portal-848175179383 --delete"
   },
   "dependencies": {
     "react": "18.3.1",
