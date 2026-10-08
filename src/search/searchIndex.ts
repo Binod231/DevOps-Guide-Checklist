@@ -17,6 +17,7 @@ import {
   tracker,
   trackerRowForPractice,
 } from '../content/registry';
+import { displayTitle } from '../content/displayTitle';
 
 /** Which source document an entry came from, for grouping results. */
 export type SearchGroup =
@@ -85,8 +86,9 @@ function guideEntries(): SearchEntry[] {
     entries.push({
       id: `category-${category.id}`,
       group: 'DevOps Implementation Guide',
-      title: category.heading,
+      title: displayTitle(category.heading),
       context: guide.title,
+      // The full heading stays searchable even though the title is shortened.
       haystack: category.heading,
       path: ROUTES.guideCategory(category.id),
     });
@@ -98,8 +100,8 @@ function guideEntries(): SearchEntry[] {
       entries.push({
         id: `practice-${practice.id}`,
         group: 'DevOps Implementation Guide',
-        title: practice.heading,
-        context: category.heading,
+        title: displayTitle(practice.heading),
+        context: displayTitle(category.heading),
         // The linked tracker S.N is included so searching an ID finds the
         // practice too. It is the row's own identifier, not invented text.
         haystack: [practice.heading, practice.checkboxLabel, row?.sn ?? ''].join(' '),
@@ -119,8 +121,8 @@ function guideEntries(): SearchEntry[] {
         entries.push({
           id: `practice-${practice.id}-${field.label.replace(/\s+/g, '-').toLowerCase()}`,
           group: 'DevOps Implementation Guide',
-          title: practice.heading,
-          context: category.heading,
+          title: displayTitle(practice.heading),
+          context: displayTitle(category.heading),
           field: field.label,
           haystack: field.value,
           snippet: field.value,
@@ -273,6 +275,7 @@ function trackerEntries(): SearchEntry[] {
         // row as well.
         practice?.heading ?? '',
       ].join(' '),
+
       snippet: row.verificationGate.trim(),
       path: ROUTES.tracker,
     };

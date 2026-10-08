@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderApp } from '../test/renderRoute';
+import { main, practiceArticle } from '../test/queries';
 import {
   ROUTES,
   allPractices,
@@ -14,16 +15,7 @@ import {
 } from '../content/registry';
 import type { Practice } from '../content/types';
 
-function main(): HTMLElement {
-  return screen.getByRole('main');
-}
-
-function practiceArticle(practice: Practice): HTMLElement {
-  const heading = within(main()).getByText(practice.heading);
-  const article = heading.closest('article');
-  if (!article) throw new Error(`No article for "${practice.heading}"`);
-  return article;
-}
+// `main` and `practiceArticle` come from the shared query helpers.
 
 /** The tracker metadata strip on a practice. */
 function metaStrip(practice: Practice): HTMLElement {
@@ -31,6 +23,11 @@ function metaStrip(practice: Practice): HTMLElement {
   const dl = article.querySelector('dl:not([data-practice-fields])');
   if (!dl) throw new Error(`No metadata strip for "${practice.heading}"`);
   return dl as HTMLElement;
+}
+
+/** The label row of a practice's metadata strip. */
+function metaLabels(practice: Practice): (string | null)[] {
+  return [...metaStrip(practice).querySelectorAll('dt')].map((t) => t.textContent);
 }
 
 describe('cross-link mapping — coverage', () => {
@@ -65,8 +62,7 @@ describe('practice metadata strip', () => {
     for (const category of guide.categories) {
       const { unmount } = renderApp(ROUTES.guideCategory(category.id));
       for (const practice of category.practices) {
-        const labels = [...metaStrip(practice).querySelectorAll('dt')].map((t) => t.textContent);
-        expect(labels, practice.heading).toEqual([
+        expect(metaLabels(practice), practice.heading).toEqual([
           'S.N',
           'Priority',
           'Company Stage',
@@ -75,6 +71,12 @@ describe('practice metadata strip', () => {
       }
       unmount();
     }
+  });
+
+  it('keeps Company Stage in the metadata, even though the title drops it', () => {
+    renderApp(ROUTES.guideCategory('5-observability-optional-for-startup'));
+    const apm = allPractices.find((p) => p.heading === 'Distributed APM & OpenTelemetry Tracing')!;
+    expect(metaStrip(apm)).toHaveTextContent('Optional For Startup');
   });
 
   it('shows the linked row values, not a neighbouring row', () => {

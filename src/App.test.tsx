@@ -2,25 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderApp } from './test/renderRoute';
+import { navLink, sidebar } from './test/queries';
 import { ROUTES, checklist, guide, navLeaves } from './content/registry';
+import { displayTitle, stageQualifier } from './content/displayTitle';
 
-function sidebar(): HTMLElement {
-  return screen.getByRole('navigation', { name: 'Portal sections' });
-}
-
-/**
- * Finds a sidebar link by its source heading.
- *
- * Accessible names are whitespace-normalised by the accname algorithm, so the
- * double spaces in headings such as `3.  Testing & Quality` collapse to one.
- * The DOM text itself stays verbatim — asserted separately below.
- */
-function navLink(heading: string): HTMLElement {
-  const normalised = heading.replace(/\s+/g, ' ');
-  return within(sidebar()).getByRole('link', {
-    name: new RegExp(`^${escape(normalised)}`),
-  });
-}
+// Query helpers live in src/test/queries.ts and account for the shortened
+// display titles.
 
 describe('app shell — landmarks and skip link', () => {
   it('renders banner, navigation and main landmarks', () => {
@@ -64,17 +51,26 @@ describe('app shell — sidebar built from the registry', () => {
     }
   });
 
-  it('puts each category heading in the DOM verbatim', () => {
+  it('shows the display title, with the stage qualifier dropped', () => {
     renderApp();
     const text = sidebar().textContent ?? '';
     for (const category of guide.categories) {
-      expect(text, category.heading).toContain(category.heading);
+      expect(text, category.heading).toContain(displayTitle(category.heading));
     }
-    // The export's spacing defects were corrected at source.
-    expect(text).toContain('3. Testing & Quality');
-    expect(text).toContain('5. Observability (Optional For Startup)');
-    expect(text).toContain('6. Disaster Recovery (Optional For Startup)');
+    expect(text).toContain('5. Observability');
+    expect(text).toContain('6. Disaster Recovery');
+    // The applicability note belongs to the tracker's Company Stage column.
+    expect(text).not.toContain('Optional For Startup');
     expect(text).not.toMatch(/\d\.\s{2}/);
+  });
+
+  it('keeps the full heading reachable as a tooltip', () => {
+    renderApp();
+    for (const category of guide.categories) {
+      if (!stageQualifier(category.heading)) continue;
+      const label = within(navLink(category.heading)).getByTitle(category.heading);
+      expect(label, category.heading).toBeInTheDocument();
+    }
   });
 
   it('lists the three source document titles as group labels', () => {
@@ -137,10 +133,9 @@ describe('app shell — sidebar built from the registry', () => {
     renderApp(ROUTES.guideCategory(category.id));
     const nav = within(sidebar());
     for (const practice of category.practices) {
-      expect(nav.getByRole('link', { name: practice.heading })).toHaveAttribute(
-        'href',
-        `#${practice.id}`,
-      );
+      expect(
+        nav.getByRole('link', { name: displayTitle(practice.heading) }),
+      ).toHaveAttribute('href', `#${practice.id}`);
     }
   });
 });
@@ -157,8 +152,13 @@ describe('app shell — routing', () => {
     (heading, id) => {
       renderApp(ROUTES.guideCategory(id));
       const h1 = screen.getByRole('heading', { level: 1 });
-      // Compared on textContent so irregular spacing is checked verbatim.
-      expect(h1).toHaveTextContent(heading, { normalizeWhitespace: false });
+      expect(h1).toHaveTextContent(displayTitle(heading), { normalizeWhitespace: false });
+      // The qualifier moves out of the title and onto its own note beside it.
+      const qualifier = stageQualifier(heading);
+      if (qualifier) {
+        const header = h1.closest('div')!.parentElement!;
+        expect(within(header).getByText(qualifier)).toBeInTheDocument();
+      }
     },
   );
 
@@ -215,9 +215,10 @@ describe('app shell — routing', () => {
     renderApp();
     const target = guide.categories[2]!;
     await user.click(navLink(target.heading));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(target.heading, {
-      normalizeWhitespace: false,
-    });
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      displayTitle(target.heading),
+      { normalizeWhitespace: false },
+    );
   });
 });
 
@@ -225,7 +226,9 @@ describe('app shell — active state and breadcrumb', () => {
   it('marks the active section with aria-current', () => {
     const category = guide.categories[1]!;
     renderApp(ROUTES.guideCategory(category.id));
-    const current = screen.getAllByText(category.heading).find((el) => el.closest('nav'));
+    const current = screen
+      .getAllByText(displayTitle(category.heading))
+      .find((el) => el.closest('nav'));
     expect(current).toHaveAttribute('aria-current', 'page');
   });
 
@@ -234,7 +237,10 @@ describe('app shell — active state and breadcrumb', () => {
     renderApp(ROUTES.guideCategory(category.id));
     const crumb = within(screen.getByRole('navigation', { name: 'Breadcrumb' }));
     expect(crumb.getByText(guide.title)).toBeInTheDocument();
-    expect(crumb.getByText(category.heading)).toHaveAttribute('aria-current', 'page');
+    expect(crumb.getByText(displayTitle(category.heading))).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   });
 
   it('updates the breadcrumb when the route changes', async () => {
@@ -318,6 +324,4 @@ describe('app shell — mobile drawer', () => {
 });
 
 /** Escapes a heading for use inside a RegExp. */
-function escape(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+

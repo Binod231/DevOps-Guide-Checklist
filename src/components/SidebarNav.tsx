@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { NAV_TREE, type NavGroup, type NavLeaf, type NavNode } from '../content/registry';
+import { NAV_TREE, ROUTES, type NavGroup, type NavLeaf, type NavNode } from '../content/registry';
+import { useAuth } from '../state/authContext';
 
 interface SidebarNavProps {
   /** Invoked after a navigation, so the mobile drawer can close itself. */
@@ -14,6 +15,8 @@ interface SidebarNavProps {
  * derived, never hand-listed, so it cannot drift from the documents.
  */
 export function SidebarNav({ onNavigate }: SidebarNavProps) {
+  const { isAdmin } = useAuth();
+
   return (
     <nav aria-label="Portal sections" className="py-4">
       <ul className="space-y-1">
@@ -26,6 +29,31 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
             )}
           </li>
         ))}
+
+        {isAdmin && (
+          <li className="pt-3 border-t border-edge/60">
+            <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+              Administration
+            </div>
+            <NavLink
+              to={ROUTES.adminDashboard}
+              onClick={onNavigate}
+              className={({ isActive }) =>
+                [
+                  'flex items-center gap-2 border-l-2 px-3 py-1.5 text-sm leading-snug',
+                  isActive
+                    ? 'border-l-accent bg-accent-subtle font-semibold text-accent'
+                    : 'border-l-transparent text-ink-secondary hover:border-l-edge-strong hover:bg-sunken',
+                ].join(' ')
+              }
+            >
+              <svg aria-hidden="true" viewBox="0 0 16 16" className="size-3.5 shrink-0" fill="currentColor">
+                <path d="M1 2.5A1.5 1.5 0 012.5 1h3A1.5 1.5 0 017 2.5v3A1.5 1.5 0 015.5 7h-3A1.5 1.5 0 011 5.5v-3zm0 8A1.5 1.5 0 012.5 9h3A1.5 1.5 0 017 10.5v3A1.5 1.5 0 015.5 15h-3A1.5 1.5 0 011 13.5v-3zm8-8A1.5 1.5 0 0110.5 1h3A1.5 1.5 0 0115 2.5v3A1.5 1.5 0 0113.5 7h-3A1.5 1.5 0 019 5.5v-3zm0 8A1.5 1.5 0 0110.5 9h3a1.5 1.5 0 011.5 1.5v3a1.5 1.5 0 01-1.5 1.5h-3A1.5 1.5 0 019 13.5v-3z" />
+              </svg>
+              <span>Admin Dashboard</span>
+            </NavLink>
+          </li>
+        )}
       </ul>
     </nav>
   );
@@ -95,7 +123,13 @@ function NavLeafLink({
       >
         {({ isActive }) => (
           <>
-            <span className="flex-1" aria-current={isActive ? 'page' : undefined}>
+            <span
+              className="flex-1"
+              aria-current={isActive ? 'page' : undefined}
+              // The full heading when the label was shortened, so the stage
+              // qualifier is still reachable.
+              title={leaf.fullLabel === leaf.label ? undefined : leaf.fullLabel}
+            >
               {leaf.label}
             </span>
             {leaf.count !== undefined && (
@@ -121,6 +155,7 @@ function NavLeafLink({
               <a
                 href={`#${anchor.id}`}
                 onClick={onNavigate}
+                title={anchor.fullLabel === anchor.label ? undefined : anchor.fullLabel}
                 className="block py-1 pr-2 text-xs leading-snug text-ink-muted hover:text-accent hover:underline"
               >
                 {anchor.label}

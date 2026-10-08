@@ -4,6 +4,7 @@ import { SectionHeader } from '../components/SectionHeader';
 import { TrackerTable } from '../components/TrackerTable';
 import { FilterPanel, type FilterGroup } from '../components/FilterPanel';
 import { ExportImportPanel } from '../components/ExportImportPanel';
+import { TrackerRowModal } from '../components/TrackerRowModal';
 import {
   type FilterField,
   type SortState,
@@ -14,7 +15,9 @@ import {
 } from '../components/trackerTableModel';
 import { UI_FLAGS } from '../config/uiFlags';
 import { checklist, tracker } from '../content/registry';
+import type { TrackerRow } from '../content/types';
 import { usePortalState } from '../state/PortalStateProvider';
+import { useAuth } from '../state/authContext';
 
 /** The two column orders the source exports use. */
 type ColumnOrder = 'canonical' | 'alternate';
@@ -31,17 +34,35 @@ const FILTER_FIELDS: { field: FilterField; header: string }[] = [
 /**
  * Implementation Tracker.
  *
- * All 24 rows with all 11 columns, sortable and filterable. The two source
+ * All rows with all 11 columns, sortable and filterable. The two source
  * exports hold the same data in different column orders, so both orders are
  * offered rather than one being picked for the reader.
+ *
+ * Administrators have full CRUD capabilities (Add, Edit all fields, Delete,
+ * and Restore rows) as well as access to the state Import/Export tools.
  */
 export function TrackerPage() {
-  const { trackerRowState } = usePortalState();
+  const {
+    trackerRowState,
+    allTrackerRows,
+    addTrackerRow,
+    updateTrackerRowDetails,
+    deleteTrackerRow,
+    restoreTrackerRows,
+    hasDeletedTrackerRows,
+  } = usePortalState();
+  const { isAdmin } = useAuth();
+
   const [sort, setSort] = useState<SortState | null>(null);
   const [filters, setFilters] = useState(emptyFilters);
   const [columnOrder, setColumnOrder] = useState<ColumnOrder>('canonical');
 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState<TrackerRow | null>(null);
+
   const editsFor = (rowKey: string) => trackerRowState(rowKey);
+
+  const baseRows = useMemo(() => allTrackerRows(tracker.rows), [allTrackerRows]);
 
   const columns = columnOrder === 'canonical' ? tracker.columns : tracker.alternateColumns;
 
@@ -50,16 +71,15 @@ export function TrackerPage() {
       FILTER_FIELDS.map(({ field, header }) => ({
         field,
         label: header,
-        options: filterOptions(tracker.rows, field, editsFor),
+        options: filterOptions(baseRows, field, editsFor),
       })),
-    // `trackerRowState` changes identity whenever an edit lands, which is
-    // exactly when a filterable value may have changed.
-    [trackerRowState],
+    // `trackerRowState` and `baseRows` change identity whenever rows or edits change.
+    [baseRows, trackerRowState],
   );
 
   const visibleRows = useMemo(
-    () => applySort(applyFilters(tracker.rows, filters, editsFor), sort, editsFor),
-    [filters, sort, trackerRowState],
+    () => applySort(applyFilters(baseRows, filters, editsFor), sort, editsFor),
+    [baseRows, filters, sort, trackerRowState],
   );
 
   const toggleFilter = (field: FilterField, value: string) => {
@@ -74,13 +94,66 @@ export function TrackerPage() {
     });
   };
 
+  const handleAddRow = () => {
+    setEditingRow(null);
+    setModalOpen(true);
+  };
+
+  const handleEditRow = (row: TrackerRow) => {
+    setEditingRow(row);
+    setModalOpen(true);
+  };
+
+  const handleDeleteRow = (rowKey: string) => {
+    deleteTrackerRow(rowKey);
+  };
+
+  const handleSaveRow = (savedRow: TrackerRow) => {
+    if (editingRow) {
+      updateTrackerRowDetails(savedRow.rowKey, savedRow);
+    } else {
+      addTrackerRow(savedRow);
+    }
+  };
+
   return (
     <PageShell>
       <SectionHeader heading={checklist.trackerLinkLabel}>
         <p className="mt-3 text-sm text-ink-muted">
-          {tracker.rows.length} rows, {tracker.columns.length} columns, as exported.
+          {baseRows.length} rows, {tracker.columns.length} columns, as exported.
         </p>
       </SectionHeader>
+
+      {isAdmin && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border border-edge bg-surface px-4 py-2.5 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="rounded-xs border border-accent-border bg-accent-subtle px-2 py-0.5 font-semibold text-accent uppercase tracking-wide">
+              Admin Mode
+            </span>
+            <span className="text-ink-muted">
+              Full CRUD enabled: create rows, edit core fields via modal, delete rows, and manage state transfer.
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleAddRow}
+              className="border border-accent-border bg-accent-subtle px-3 py-1 font-semibold text-accent hover:bg-accent-subtle/80"
+            >
+              + Add Tracker Row
+            </button>
+            {hasDeletedTrackerRows && (
+              <button
+                type="button"
+                onClick={restoreTrackerRows}
+                className="border border-edge bg-surface px-2.5 py-1 text-ink-secondary hover:bg-sunken"
+              >
+                Restore Deleted Rows
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="mt-6 space-y-4">
         <FilterPanel
@@ -89,7 +162,7 @@ export function TrackerPage() {
           onToggle={toggleFilter}
           onClear={() => setFilters(emptyFilters())}
           matching={visibleRows.length}
-          total={tracker.rows.length}
+          total={baseRows.length}
         />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -144,7 +217,9 @@ export function TrackerPage() {
           rows={visibleRows}
           sort={sort}
           onSortChange={setSort}
-          caption={`Implementation Tracker, ${visibleRows.length} of ${tracker.rows.length} rows shown`}
+          caption={`Implementation Tracker, ${visibleRows.length} of ${baseRows.length} rows shown`}
+          onEditRow={isAdmin ? handleEditRow : undefined}
+          onDeleteRow={isAdmin ? handleDeleteRow : undefined}
         />
 
         {UI_FLAGS.perRowNotesAndEvidence && (
@@ -154,8 +229,15 @@ export function TrackerPage() {
           </p>
         )}
 
-        <ExportImportPanel />
+        {isAdmin && <ExportImportPanel />}
       </div>
+
+      <TrackerRowModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        initialRow={editingRow}
+        onSave={handleSaveRow}
+      />
     </PageShell>
   );
 }

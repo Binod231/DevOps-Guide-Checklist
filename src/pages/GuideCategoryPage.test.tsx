@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import { renderApp } from '../test/renderRoute';
+import { practiceArticle } from '../test/queries';
 import { ROUTES, allPractices, guide } from '../content/registry';
-import type { Practice } from '../content/types';
+import { displayTitle } from '../content/displayTitle';
 
 /** The five labelled fields, in source order. */
 const FIELD_LABELS = [
@@ -13,19 +14,8 @@ const FIELD_LABELS = [
   'Verification gate',
 ];
 
-/**
- * Locates a practice's article.
- *
- * Scoped to the `main` landmark because the heading also appears as a
- * third-level anchor in the sidebar.
- */
-function practiceArticle(practice: Practice): HTMLElement {
-  const main = screen.getByRole('main');
-  const heading = within(main).getByText(practice.heading);
-  const article = heading.closest('article');
-  if (!article) throw new Error(`No article for "${practice.heading}"`);
-  return article;
-}
+// `practiceArticle` and friends come from the shared query helpers, which
+// account for the shortened display titles.
 
 describe('guide category page — practice rendering', () => {
   it.each(guide.categories.map((c) => [c.heading, c.id, c.practices.length] as const))(
@@ -54,7 +44,7 @@ describe('guide category page — practice rendering', () => {
       .getAllByRole('heading', { level: 3 })
       .map((h) => h.textContent ?? '');
     category.practices.forEach((practice, index) => {
-      expect(headings[index]).toContain(practice.heading);
+      expect(headings[index]).toContain(displayTitle(practice.heading));
     });
   });
 
@@ -71,7 +61,7 @@ describe('guide category page — practice rendering', () => {
     renderApp(ROUTES.guideCategory(category.id));
     for (const practice of category.practices) {
       expect(
-        screen.getByRole('link', { name: `Link to ${practice.heading}` }),
+        screen.getByRole('link', { name: `Link to ${displayTitle(practice.heading)}` }),
       ).toHaveAttribute('href', `#${practice.id}`);
     }
   });

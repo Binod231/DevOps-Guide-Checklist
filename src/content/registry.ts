@@ -22,6 +22,7 @@ import type {
   TrackerRow,
 } from './types';
 import { UI_FLAGS } from '../config/uiFlags';
+import { displayTitle } from './displayTitle';
 
 export const guide = guideJson as GuideDocument;
 export const checklist = checklistJson as ChecklistDocument;
@@ -39,22 +40,38 @@ export const ROUTES = {
   productionReadiness: '/checklist/production-readiness',
   notes: '/notes',
   tracker: '/tracker',
+  adminDashboard: '/admin',
 } as const;
 
 /* ------------------------------------------------------------------ *
  * Navigation tree, derived from the documents
  * ------------------------------------------------------------------ */
 
+export interface NavAnchor {
+  id: string;
+  /** Label shown in the sidebar. */
+  label: string;
+  /** The source heading in full, which may be longer than `label`. */
+  fullLabel: string;
+}
+
 export interface NavLeaf {
   kind: 'leaf';
   id: string;
-  /** Label shown in the sidebar, taken from the source heading. */
+  /**
+   * Label shown in the sidebar.
+   *
+   * Derived from the source heading, with any trailing company-stage qualifier
+   * dropped — that information lives in the tracker's `Company Stage` column.
+   */
   label: string;
+  /** The source heading in full, which may be longer than `label`. */
+  fullLabel: string;
   path: string;
   /** Count shown beside the label, when the section holds countable items. */
   count?: number;
   /** Anchor targets beneath this entry, for third-level navigation. */
-  anchors?: { id: string; label: string }[];
+  anchors?: NavAnchor[];
 }
 
 export interface NavGroup {
@@ -71,15 +88,20 @@ function guideCategoryLeaf(category: GuideCategory): NavLeaf {
   return {
     kind: 'leaf',
     id: category.id,
-    label: category.heading,
+    label: displayTitle(category.heading),
+    fullLabel: category.heading,
     path: ROUTES.guideCategory(category.id),
     count: category.practices.length,
-    anchors: category.practices.map((p) => ({ id: p.id, label: p.heading })),
+    anchors: category.practices.map((p) => ({
+      id: p.id,
+      label: displayTitle(p.heading),
+      fullLabel: p.heading,
+    })),
   };
 }
 
-function phaseAnchor(phase: Phase): { id: string; label: string } {
-  return { id: phase.id, label: phase.heading };
+function phaseAnchor(phase: Phase): NavAnchor {
+  return { id: phase.id, label: phase.heading, fullLabel: phase.heading };
 }
 
 /**
@@ -93,6 +115,7 @@ export const NAV_TREE: NavNode[] = [
     kind: 'leaf',
     id: 'overview',
     label: guide.objective.heading,
+    fullLabel: guide.objective.heading,
     path: ROUTES.overview,
   },
   {
@@ -110,6 +133,7 @@ export const NAV_TREE: NavNode[] = [
         kind: 'leaf',
         id: 'implementation-order',
         label: checklist.implementationOrderHeading,
+        fullLabel: checklist.implementationOrderHeading,
         path: ROUTES.implementationOrder,
         count: totalPhaseItems(),
         anchors: checklist.phases.map(phaseAnchor),
@@ -118,6 +142,7 @@ export const NAV_TREE: NavNode[] = [
         kind: 'leaf',
         id: 'production-readiness',
         label: checklist.readinessGate.heading,
+        fullLabel: checklist.readinessGate.heading,
         path: ROUTES.productionReadiness,
         count: checklist.readinessGate.criteria.length,
       },
@@ -125,11 +150,24 @@ export const NAV_TREE: NavNode[] = [
         kind: 'leaf',
         id: 'notes',
         label: checklist.notes.heading,
+        fullLabel: checklist.notes.heading,
         path: ROUTES.notes,
         anchors: [
-          ...checklist.notes.noteSections.map((s) => ({ id: s.id, label: s.heading })),
-          { id: 'open-issues', label: checklist.notes.openIssuesHeading },
-          { id: 'useful-links', label: checklist.notes.usefulLinksHeading },
+          ...checklist.notes.noteSections.map((s) => ({
+            id: s.id,
+            label: s.heading,
+            fullLabel: s.heading,
+          })),
+          {
+            id: 'open-issues',
+            label: checklist.notes.openIssuesHeading,
+            fullLabel: checklist.notes.openIssuesHeading,
+          },
+          {
+            id: 'useful-links',
+            label: checklist.notes.usefulLinksHeading,
+            fullLabel: checklist.notes.usefulLinksHeading,
+          },
         ],
       },
     ],
@@ -143,6 +181,7 @@ export const NAV_TREE: NavNode[] = [
         kind: 'leaf',
         id: 'tracker',
         label: checklist.trackerLinkLabel,
+        fullLabel: checklist.trackerLinkLabel,
         path: ROUTES.tracker,
         count: tracker.rows.length,
       },

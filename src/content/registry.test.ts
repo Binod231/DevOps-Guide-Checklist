@@ -22,6 +22,7 @@ import {
   trackerRowsForGuideCategory,
 } from './registry';
 import type { NavGroup, NavLeaf } from './registry';
+import { displayTitle } from './displayTitle';
 
 function group(id: string): NavGroup {
   const node = NAV_TREE.find((n) => n.id === id);
@@ -50,10 +51,23 @@ describe('registry — navigation derived from the documents', () => {
     expect(group('tracker').label).toBe(checklist.trackerLinkLabel);
   });
 
-  it('lists all 6 guide categories using their verbatim headings', () => {
+  it('lists all 6 guide categories using their display titles', () => {
     const children = group('guide').children as NavLeaf[];
     expect(children).toHaveLength(6);
-    expect(children.map((c) => c.label)).toEqual(guide.categories.map((c) => c.heading));
+    expect(children.map((c) => c.label)).toEqual(
+      guide.categories.map((c) => displayTitle(c.heading)),
+    );
+  });
+
+  it('keeps the full heading on every leaf, alongside the display label', () => {
+    const children = group('guide').children as NavLeaf[];
+    expect(children.map((c) => c.fullLabel)).toEqual(guide.categories.map((c) => c.heading));
+  });
+
+  it('drops the company-stage qualifier from navigation labels', () => {
+    for (const leaf of navLeaves()) {
+      expect(leaf.label, leaf.fullLabel).not.toMatch(/\(Optional|\(Implement in|\(Staging Env/i);
+    }
   });
 
   it('shows the practice count beside each category', () => {
@@ -65,7 +79,10 @@ describe('registry — navigation derived from the documents', () => {
     const children = group('guide').children as NavLeaf[];
     const anchors = children.flatMap((c) => c.anchors ?? []);
     expect(anchors).toHaveLength(24);
-    expect(anchors.map((a) => a.label)).toEqual(allPractices.map((p) => p.heading));
+    expect(anchors.map((a) => a.label)).toEqual(
+      allPractices.map((p) => displayTitle(p.heading)),
+    );
+    expect(anchors.map((a) => a.fullLabel)).toEqual(allPractices.map((p) => p.heading));
   });
 
   it('lists the 4 phases as anchors under the implementation order', () => {
@@ -115,8 +132,9 @@ describe('registry — navigation derived from the documents', () => {
   });
 
   it('invents no navigation labels', () => {
-    // Every label must be a heading or title taken from a source document.
-    const sourceLabels = new Set<string>([
+    // Every label must be a source heading, or that heading with its trailing
+    // company-stage qualifier removed. Nothing else.
+    const headings = [
       guide.title,
       guide.objective.heading,
       checklist.title,
@@ -130,16 +148,21 @@ describe('registry — navigation derived from the documents', () => {
       ...allPractices.map((p) => p.heading),
       ...checklist.phases.map((p) => p.heading),
       ...checklist.notes.noteSections.map((s) => s.heading),
-    ]);
+    ];
+    const allowed = new Set([...headings, ...headings.map(displayTitle)]);
 
     const collect = (nodes: typeof NAV_TREE): string[] =>
       nodes.flatMap((node) =>
         node.kind === 'group'
           ? [node.label, ...collect(node.children)]
-          : [node.label, ...(node.anchors ?? []).map((a) => a.label)],
+          : [
+              node.label,
+              node.fullLabel,
+              ...(node.anchors ?? []).flatMap((a) => [a.label, a.fullLabel]),
+            ],
       );
 
-    const unknown = collect(NAV_TREE).filter((label) => !sourceLabels.has(label));
+    const unknown = collect(NAV_TREE).filter((label) => !allowed.has(label));
     expect(unknown, 'these sidebar labels are not source headings').toEqual([]);
   });
 });

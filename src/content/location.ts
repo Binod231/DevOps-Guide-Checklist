@@ -5,7 +5,7 @@
  * source headings, so the header and breadcrumb cannot show a label that is not
  * in the documents.
  */
-import { NAV_TREE, type NavNode } from './registry';
+import { NAV_TREE, ROUTES, type NavNode } from './registry';
 
 export interface PortalLocation {
   /** Source document title, when the section sits under one. */
@@ -34,6 +34,13 @@ function walk(
 }
 
 export function resolveLocation(pathname: string): PortalLocation {
+  if (pathname === ROUTES.adminDashboard) {
+    return {
+      documentLabel: 'Administration',
+      sectionLabel: 'Verification Dashboard',
+      path: ROUTES.adminDashboard,
+    };
+  }
   return walk(NAV_TREE, pathname, undefined) ?? { path: pathname };
 }
 

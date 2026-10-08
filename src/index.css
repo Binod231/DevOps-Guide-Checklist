@@ -67,44 +67,53 @@
 .dark {
   color-scheme: dark;
 
-  --portal-canvas: #0b1220;
-  --portal-surface: #111a2b;
-  --portal-surface-sunken: #0d1524;
-  --portal-surface-accent: #16253d;
+  /*
+   * Neutral charcoal surfaces. Greys are kept genuinely neutral — red, green
+   * and blue stay within a few points of each other — so the interface reads
+   * as a document reader rather than taking on a colour cast.
+   */
+  --portal-canvas: #16181a;
+  --portal-surface: #1f2224;
+  --portal-surface-sunken: #1a1d1f;
+  --portal-surface-accent: #262a2d;
 
-  /* 14.8:1, 13.1:1, 6.9:1 on --portal-surface */
-  --portal-text: #e8edf5;
-  --portal-text-secondary: #dce4f0;
-  --portal-text-muted: #a2b2c9;
-  --portal-text-inverse: #0b1220;
+  /* Text — 13.4:1, 11.8:1, 5.9:1 on --portal-surface */
+  --portal-text: #e8e9ea;
+  --portal-text-secondary: #d6d8d9;
+  --portal-text-muted: #a1a4a6;
+  --portal-text-inverse: #16181a;
 
-  /* 7.1:1 on --portal-surface */
-  --portal-accent: #7aa8e0;
-  --portal-accent-hover: #9cc0ec;
-  --portal-accent-subtle: #16253d;
-  --portal-accent-border: #2f4a70;
+  /*
+   * A restrained steel blue. Desaturated well below the light theme's accent
+   * so it carries state without becoming the loudest thing on screen.
+   */
+  --portal-accent: #93b4d4;
+  --portal-accent-hover: #adc7e0;
+  --portal-accent-subtle: #22282e;
+  --portal-accent-border: #3b4854;
 
-  --portal-border: #27344a;
-  --portal-border-strong: #3d4d68;
+  --portal-border: #34373a;
+  --portal-border-strong: #4e5154;
 
-  --portal-p0: #f09a9a;
-  --portal-p0-surface: #2c1618;
-  --portal-p1: #e3b074;
-  --portal-p1-surface: #2a1f12;
-  --portal-p2: #a8b8cf;
-  --portal-p2-surface: #1a2335;
+  /* Priority — muted, so a table of P0 rows is readable rather than alarming */
+  --portal-p0: #e4a09c;
+  --portal-p0-surface: #2a2020;
+  --portal-p1: #d7b183;
+  --portal-p1-surface: #282220;
+  --portal-p2: #adb2b7;
+  --portal-p2-surface: #242729;
 
-  --portal-status-neutral: #a2b2c9;
-  --portal-status-neutral-surface: #1a2335;
-  --portal-status-active: #7aa8e0;
-  --portal-status-active-surface: #16253d;
-  --portal-status-done: #74c79c;
-  --portal-status-done-surface: #132619;
+  --portal-status-neutral: #a1a4a6;
+  --portal-status-neutral-surface: #242729;
+  --portal-status-active: #93b4d4;
+  --portal-status-active-surface: #22282e;
+  --portal-status-done: #8fbfa0;
+  --portal-status-done-surface: #1e2622;
 
-  --portal-stage-all: #7aa8e0;
-  --portal-stage-optional: #a2b2c9;
+  --portal-stage-all: #93b4d4;
+  --portal-stage-optional: #a1a4a6;
 
-  --portal-focus: #7aa8e0;
+  --portal-focus: #adc7e0;
 }
 
 /* Expose the tokens to Tailwind utilities. `inline` keeps the var() reference

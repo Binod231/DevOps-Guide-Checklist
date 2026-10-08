@@ -9,8 +9,11 @@ export function Breadcrumb() {
   if (trail.length === 0) return null;
 
   return (
-    <nav aria-label="Breadcrumb" className="border-b border-edge bg-sunken px-4 py-2 sm:px-6">
-      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-muted">
+    <nav
+      aria-label="Breadcrumb"
+      className="min-w-0 border-b border-edge bg-sunken px-4 py-2 sm:px-6"
+    >
+      <ol className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-muted">
         {trail.map((label, index) => {
           const isLast = index === trail.length - 1;
           return (
@@ -23,6 +26,7 @@ export function Breadcrumb() {
               <span
                 className={isLast ? 'font-semibold text-ink-secondary' : undefined}
                 aria-current={isLast ? 'page' : undefined}
+                title={label}
               >
                 {label}
               </span>

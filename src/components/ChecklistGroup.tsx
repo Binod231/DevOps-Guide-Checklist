@@ -3,6 +3,7 @@ import type { ChecklistItem as ChecklistItemData } from '../content/types';
 import { ChecklistItem } from './ChecklistItem';
 import { ProgressIndicator } from './ProgressIndicator';
 import { usePortalState } from '../state/PortalStateProvider';
+import { useAuth } from '../state/authContext';
 
 interface ChecklistGroupProps {
   /** Anchor id for deep-linking, taken from the content registry. */
@@ -16,6 +17,9 @@ interface ChecklistGroupProps {
   level?: 2 | 3;
   /** Renders per-item trailing content, e.g. a badge. */
   renderTrailing?: (item: ChecklistItemData) => ReactNode;
+  onAddItem?: () => void;
+  onEditItem?: (item: ChecklistItemData) => void;
+  onDeleteItem?: (itemId: string) => void;
 }
 
 /**
@@ -29,8 +33,12 @@ export function ChecklistGroup({
   items,
   level = 2,
   renderTrailing,
+  onAddItem,
+  onEditItem,
+  onDeleteItem,
 }: ChecklistGroupProps) {
   const { progressForIds } = usePortalState();
+  const { isAdmin } = useAuth();
   const progress = progressForIds(items.map((i) => i.id));
   const headingId = `${id}-heading`;
   const Heading = level === 2 ? 'h2' : 'h3';
@@ -48,18 +56,53 @@ export function ChecklistGroup({
             {heading}
           </Heading>
         </div>
-        <ProgressIndicator label={heading} progress={progress} compact />
+        <div className="flex items-center gap-3">
+          {isAdmin && onAddItem && (
+            <button
+              type="button"
+              onClick={onAddItem}
+              className="border border-accent-border bg-accent-subtle px-2.5 py-1 text-xs font-semibold text-accent hover:bg-accent-subtle/80"
+            >
+              + Add Item
+            </button>
+          )}
+          <ProgressIndicator label={heading} progress={progress} compact />
+        </div>
       </div>
 
       <ul className="space-y-2.5 px-4 py-4">
         {items.map((item) => (
-          <li key={item.id}>
-            <ChecklistItem
-              id={item.id}
-              text={item.text}
-              dense
-              trailing={renderTrailing?.(item)}
-            />
+          <li key={item.id} className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <ChecklistItem
+                id={item.id}
+                text={item.text}
+                dense
+                trailing={renderTrailing?.(item)}
+              />
+            </div>
+            {isAdmin && (onEditItem || onDeleteItem) && (
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => onEditItem?.(item)}
+                  aria-label={`Edit item ${item.text}`}
+                  className="border border-edge bg-surface px-2 py-0.5 text-xs font-medium text-ink hover:border-accent hover:bg-sunken"
+                  title="Edit item"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDeleteItem?.(item.id)}
+                  aria-label={`Delete item ${item.text}`}
+                  className="border border-rose-200 bg-rose-50/50 px-2 py-0.5 text-xs font-medium text-rose-700 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-400"
+                  title="Delete item"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
           </li>
         ))}
       </ul>

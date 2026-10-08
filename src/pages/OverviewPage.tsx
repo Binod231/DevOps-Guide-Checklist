@@ -3,6 +3,7 @@ import { PageShell } from '../components/PageShell';
 import { SectionHeader } from '../components/SectionHeader';
 import { InlineMarkdown } from '../components/InlineMarkdown';
 import { ROUTES, checklist, guide, tracker, totalPhaseItems } from '../content/registry';
+import { displayTitle } from '../content/displayTitle';
 
 /**
  * Overview.
@@ -59,9 +60,10 @@ export function OverviewPage() {
             <li key={category.id}>
               <Link
                 to={ROUTES.guideCategory(category.id)}
+                title={category.heading}
                 className="flex items-baseline justify-between gap-3 border border-edge bg-surface px-3 py-2 text-sm text-ink-secondary hover:border-accent-border hover:bg-accent-subtle"
               >
-                <span>{category.heading}</span>
+                <span>{displayTitle(category.heading)}</span>
                 <span aria-hidden="true" className="shrink-0 text-xs text-ink-muted tabular-nums">
                   {category.practices.length}
                 </span>

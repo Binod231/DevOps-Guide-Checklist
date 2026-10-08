@@ -8,6 +8,7 @@ import {
   tracker,
 } from '../content/registry';
 import { usePortalState } from '../state/PortalStateProvider';
+import { useAuth } from '../state/authContext';
 import {
   type ImportIssue,
   findUnknownIds,
@@ -57,9 +58,14 @@ type Feedback =
  */
 export function ExportImportPanel() {
   const { state, replaceState } = usePortalState();
+  const { isAdmin } = useAuth();
   const [feedback, setFeedback] = useState<Feedback>({ kind: 'idle' });
   const [includeAdded, setIncludeAdded] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  if (!isAdmin) {
+    return null;
+  }
 
   const exportJson = () => {
     download(`devops-portal-state-${today()}.json`, serialiseState(state), 'application/json');
@@ -129,7 +135,9 @@ export function ExportImportPanel() {
           </button>
           <button
             type="button"
-            onClick={() => fileInput.current?.click()}
+            onClick={() => {
+              fileInput.current?.click();
+            }}
             className="border border-edge bg-surface px-3 py-1.5 text-sm text-ink-secondary hover:bg-sunken"
           >
             Import state (JSON)
@@ -156,7 +164,10 @@ export function ExportImportPanel() {
             onChange={() => setIncludeAdded((v) => !v)}
             className="mt-0.5 size-3.5 shrink-0 cursor-pointer accent-[var(--portal-accent)]"
           />
-          <label htmlFor="csv-include-added" className="cursor-pointer text-xs text-ink-muted">
+          <label
+            htmlFor="csv-include-added"
+            className="cursor-pointer text-xs text-ink-muted"
+          >
             Include the portal&rsquo;s Notes and Evidence columns in the CSV. Leave this off for a
             CSV with the same columns as the source export.
           </label>

@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import type { Practice } from '../content/types';
 import { FieldBlock } from './FieldBlock';
+import { displayTitle, stageQualifier } from '../content/displayTitle';
+import { useAuth } from '../state/authContext';
 
 interface PracticeEntryProps {
   practice: Practice;
@@ -8,6 +10,8 @@ interface PracticeEntryProps {
   control?: ReactNode;
   /** Metadata strip, e.g. the linked tracker row's S.N and priority. */
   meta?: ReactNode;
+  onEdit?: (practice: Practice) => void;
+  onDelete?: (practiceId: string) => void;
 }
 
 /**
@@ -18,7 +22,11 @@ interface PracticeEntryProps {
  *
  * Field labels mirror the source bullets exactly, in source order.
  */
-export function PracticeEntry({ practice, control, meta }: PracticeEntryProps) {
+export function PracticeEntry({ practice, control, meta, onEdit, onDelete }: PracticeEntryProps) {
+  const { isAdmin } = useAuth();
+  const qualifier = stageQualifier(practice.heading);
+  const showActions = isAdmin && Boolean(onEdit || onDelete);
+
   return (
     <article
       id={practice.id}
@@ -30,20 +38,51 @@ export function PracticeEntry({ practice, control, meta }: PracticeEntryProps) {
           <h3
             id={`${practice.id}-heading`}
             className="text-base font-semibold leading-snug text-ink"
+            title={practice.heading}
           >
             <span className="mr-2 font-mono text-xs font-normal text-ink-muted tabular-nums">
               {practice.sourceOrder}
             </span>
-            {practice.heading}
+            {displayTitle(practice.heading)}
           </h3>
-          <a
-            href={`#${practice.id}`}
-            className="mt-0.5 shrink-0 text-xs text-ink-muted hover:text-accent hover:underline"
-          >
-            <span aria-hidden="true">#</span>
-            <span className="sr-only">Link to {practice.heading}</span>
-          </a>
+          <div className="flex items-center gap-2">
+            {showActions && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => onEdit?.(practice)}
+                  aria-label={`Edit practice ${practice.heading}`}
+                  className="border border-edge bg-surface px-2 py-0.5 text-xs font-medium text-ink hover:border-accent hover:bg-sunken"
+                  title={`Edit practice ${practice.heading}`}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete?.(practice.id)}
+                  aria-label={`Delete practice ${practice.heading}`}
+                  className="border border-rose-200 bg-rose-50/50 px-2 py-0.5 text-xs font-medium text-rose-700 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-400"
+                  title={`Delete practice ${practice.heading}`}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+            <a
+              href={`#${practice.id}`}
+              className="mt-0.5 shrink-0 text-xs text-ink-muted hover:text-accent hover:underline"
+            >
+              <span aria-hidden="true">#</span>
+              <span className="sr-only">Link to {displayTitle(practice.heading)}</span>
+            </a>
+          </div>
         </div>
+
+        {qualifier && (
+          // The applicability note from the heading. The tracker records the
+          // same thing in its Company Stage column.
+          <p className="mt-1.5 text-xs text-ink-muted">{qualifier}</p>
+        )}
 
         {meta}
         {control && <div className="mt-3">{control}</div>}

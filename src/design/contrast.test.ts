@@ -215,6 +215,74 @@ describe('contrast — border-strong carries no state', () => {
   });
 });
 
+/** Largest difference between any two RGB channels. 0 is a perfect grey. */
+function channelSpread(hex: string): number {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) throw new Error(`Not a 6-digit hex colour: ${hex}`);
+  const n = Number.parseInt(m[1]!, 16);
+  const channels = [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+  return Math.max(...channels) - Math.min(...channels);
+}
+
+describe('contrast — the greys stay neutral', () => {
+  /** Surfaces, which should read as grey in either theme. */
+  const SURFACE_TOKENS = ['--portal-canvas', '--portal-surface', '--portal-surface-sunken'];
+
+  /** Text and borders, held to neutral in dark mode only. */
+  const DARK_NEUTRAL_TOKENS = [
+    ...SURFACE_TOKENS,
+    '--portal-text',
+    '--portal-text-secondary',
+    '--portal-text-muted',
+    '--portal-border',
+    '--portal-border-strong',
+  ];
+
+  it.each([
+    ['light', LIGHT],
+    ['dark', DARK],
+  ] as const)('keeps %s surfaces neutral', (themeName, theme) => {
+    for (const token of SURFACE_TOKENS) {
+      const spread = channelSpread(colour(theme, token));
+      expect(spread, `${themeName}: ${token} is ${spread} points off neutral`).toBeLessThanOrEqual(
+        6,
+      );
+    }
+  });
+
+  it('keeps dark-theme text and borders neutral too', () => {
+    // The first dark palette was navy — #0b1220 and #111a2b are 21 and 26
+    // points of blue. Professional dark means charcoal, not a blue cast.
+    for (const token of DARK_NEUTRAL_TOKENS) {
+      const spread = channelSpread(colour(DARK, token));
+      expect(spread, `dark: ${token} is ${spread} points off neutral`).toBeLessThanOrEqual(8);
+    }
+  });
+
+  it('allows the light theme its navy-charcoal text', () => {
+    // Deliberate in the light palette, and only there.
+    expect(channelSpread(colour(LIGHT, '--portal-text'))).toBeGreaterThan(12);
+  });
+
+  it('reserves colour for the accent and the status palette', () => {
+    // The accent is allowed to be tinted; that is what makes it an accent.
+    expect(channelSpread(colour(DARK, '--portal-accent'))).toBeGreaterThan(12);
+    expect(channelSpread(colour(LIGHT, '--portal-accent'))).toBeGreaterThan(12);
+  });
+
+  it('keeps the dark accent calmer than the light one', () => {
+    // A bright accent on a dark surface reads as a glow. Desaturate it.
+    expect(channelSpread(colour(DARK, '--portal-accent'))).toBeLessThan(
+      channelSpread(colour(LIGHT, '--portal-accent')),
+    );
+  });
+
+  it('channelSpread recognises a perfect grey and a pure hue', () => {
+    expect(channelSpread('#808080')).toBe(0);
+    expect(channelSpread('#0000ff')).toBe(255);
+  });
+});
+
 describe('contrast — ratio helper', () => {
   it('computes the known extremes', () => {
     expect(ratio('#000000', '#ffffff')).toBe(21);

@@ -12,6 +12,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import { renderApp } from './renderRoute';
 import { ROUTES, allPractices, checklist, guide, tracker } from '../content/registry';
+import { displayTitle, stageQualifier } from '../content/displayTitle';
 
 interface Tally {
   label: string;
@@ -57,10 +58,22 @@ describe('coverage — guide', () => {
     for (const category of guide.categories) {
       const { unmount } = renderApp(ROUTES.guideCategory(category.id));
       const h1 = screen.getByRole('heading', { level: 1 });
-      if ((h1.textContent ?? '').includes(category.heading)) rendered += 1;
+      if ((h1.textContent ?? '').includes(displayTitle(category.heading))) rendered += 1;
       unmount();
     }
     record('Guide categories', rendered, 6);
+  });
+
+  it('shows the stage qualifier beside the title wherever a heading had one', () => {
+    const withQualifier = guide.categories.filter((c) => stageQualifier(c.heading));
+    let rendered = 0;
+    for (const category of withQualifier) {
+      const { unmount } = renderApp(ROUTES.guideCategory(category.id));
+      const text = screen.getByRole('main').textContent ?? '';
+      if (text.includes(stageQualifier(category.heading)!)) rendered += 1;
+      unmount();
+    }
+    record('Category stage qualifiers', rendered, withQualifier.length);
   });
 
   it('renders all 24 practices', () => {
@@ -89,7 +102,9 @@ describe('coverage — guide', () => {
       const { unmount } = renderApp(ROUTES.guideCategory(category.id));
       const main = screen.getByRole('main');
       for (const practice of category.practices) {
-        const article = within(main).getByText(practice.heading).closest('article')!;
+        const article = within(main)
+          .getByText(displayTitle(practice.heading))
+          .closest('article')!;
         const text = article.textContent ?? '';
         for (const value of [
           practice.description,

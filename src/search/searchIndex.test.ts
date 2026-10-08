@@ -9,6 +9,7 @@ import {
   search,
 } from './searchIndex';
 import { allPractices, checklist, guide, tracker } from '../content/registry';
+import { displayTitle } from '../content/displayTitle';
 
 const RAW = [sources.guide, sources.checklist, sources.tracker, sources.trackerAll] as const;
 
@@ -21,22 +22,30 @@ describe('search index — coverage', () => {
     expect(INDEX_SIZE).toBeGreaterThan(200);
   });
 
-  it('indexes every category heading', () => {
+  it('indexes every category, titled by its display title', () => {
     for (const category of guide.categories) {
       expect(
-        SEARCH_INDEX.some((e) => e.title === category.heading),
+        SEARCH_INDEX.some((e) => e.title === displayTitle(category.heading)),
         category.heading,
       ).toBe(true);
     }
   });
 
-  it('indexes every practice heading', () => {
+  it('indexes every practice, titled by its display title', () => {
     for (const practice of allPractices) {
       expect(
-        SEARCH_INDEX.some((e) => e.title === practice.heading),
+        SEARCH_INDEX.some((e) => e.title === displayTitle(practice.heading)),
         practice.heading,
       ).toBe(true);
     }
+  });
+
+  it('keeps the full heading searchable even though the title is shortened', () => {
+    // Searching the qualifier still reaches the practice.
+    const results = search('Optional For Startup');
+    expect(results.length).toBeGreaterThan(0);
+    expect(search('Progressive Delivery & Canary Deployments (Optional For Startup)').length)
+      .toBeGreaterThan(0);
   });
 
   it('indexes all five fields of every practice', () => {

@@ -26,6 +26,15 @@ export function NotesPage() {
         them in, and your entries are stored in this browser only.
       </p>
 
+      <div className="mt-4 flex flex-wrap items-center gap-2 border border-edge bg-surface px-4 py-2 text-xs text-ink-secondary">
+        <span className="rounded-xs border border-status-done bg-status-done-surface px-2 py-0.5 font-semibold text-status-done uppercase tracking-wide">
+          Full Write Access
+        </span>
+        <span className="text-ink-muted">
+          All note fields, open issues, and useful links are editable by both Normal Users and Administrators.
+        </span>
+      </div>
+
       <div className="mt-6 space-y-5">
         {notes.noteSections.map((section) => (
           <NoteField key={section.id} id={section.id} heading={section.heading} prompt={section.prompt} />
@@ -78,11 +87,10 @@ function NoteField({
 }
 
 /**
- * The three blank `Open Issues` rows.
+ * Open Issues rows.
  *
- * The source writes them as `- [ ]  [ ]` — a checkbox with no text. Each is
- * rendered as a checkbox plus an empty text field, so the reader can supply the
- * text the document left out.
+ * Rendered as three interactive rows allowing checkbox completion and text
+ * entry, matching the source document structure.
  */
 function OpenIssues() {
   const { isChecked, toggleChecked, openIssueValue, setOpenIssue } = usePortalState();
@@ -99,7 +107,7 @@ function OpenIssues() {
           {openIssuesHeading}
         </h2>
         <p className="mt-1 text-xs text-ink-muted">
-          {openIssues.length} blank rows, as left in the source document.
+          3 blank rows, as left in the source document.
         </p>
       </div>
 

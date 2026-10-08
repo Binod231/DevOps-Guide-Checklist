@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import { renderApp } from '../test/renderRoute';
 import { ROUTES, checklist, guide, tracker } from '../content/registry';
+import { displayTitle } from '../content/displayTitle';
 
 describe('overview page — Objective section', () => {
   it('renders the Objective heading as the page h1', () => {
@@ -68,7 +69,7 @@ describe('overview page — contents index', () => {
     const nav = within(screen.getByRole('navigation', { name: 'Contents' }));
     for (const category of guide.categories) {
       const link = nav.getByRole('link', {
-        name: new RegExp(`^${escapeRe(category.heading.replace(/\s+/g, ' '))}`),
+        name: new RegExp(`^${escapeRe(displayTitle(category.heading))}`),
       });
       expect(link).toHaveAttribute('href', ROUTES.guideCategory(category.id));
       expect(link).toHaveAccessibleName(
