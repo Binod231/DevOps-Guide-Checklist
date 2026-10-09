@@ -135,3 +135,19 @@ VITE_S3_WEBSITE_URL=http://devops-guide-portal-848175179383.s3-website-us-east-1
 - Sensitive credentials and keys are strictly managed via environment variables and `.gitignore`.
 - Root administrator passwords are encrypted/masked and never exposed in the UI.
 - Pre-built content JSON models live under `src/content/generated/` and are tracked directly in source control for reliable, standalone builds without external dependencies.
+
+---
+
+## 🤖 AI / LLM Assistance & Development Transparency
+
+In the spirit of open-source transparency and engineering integrity, here is the breakdown of how this project was developed:
+
+| Area | Human vs. AI Contribution | Details |
+|---|---|---|
+| **Domain Analysis & DevOps Roadmap** | **~90% Human** | Grounded in real-world DevOps audits, operational checklists, security baselines, and junior engineer mentoring requirements. |
+| **System Architecture & Requirements** | **~85% Human** | Designed the multi-tier workflow (self-learner isolation vs. managed Cognito verification, cloud state synchronization, and RBAC). |
+| **Frontend Implementation & React Components** | **~75% AI-Assisted** | Built via AI pair-programming (LLM assisted in TypeScript scaffolding, React component templates, and Tailwind styling). |
+| **Automated Test Suite (887 Tests / 31 Files)** | **~85% AI-Assisted** | Comprehensive unit, integration, and axe-core accessibility tests generated and refined with AI assistance under human review. |
+| **Quality Review, Deployment & Validation** | **~100% Human** | Manual verification, AWS CLI configuration, S3 bucket setup, Cognito user pool tuning, and ongoing maintenance. |
+
+> **Summary:** The core DevOps knowledge, structure, and mentoring framework come from hands-on engineering analysis; an LLM was leveraged as an accelerated coding partner to generate frontend boilerplate, state logic, and exhaustive test coverage.
