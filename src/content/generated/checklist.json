@@ -1,0 +1,373 @@
+{
+  "title": "DevOps Operational Checklist",
+  "trackerLinkLabel": "Implementation Tracker",
+  "trackerLinkTarget": "Implementation%20Tracker%203f1e3ade4b32805d868ed8dcec71f05b.csv",
+  "implementationOrderHeading": "Suggested Implementation Order",
+  "phases": [
+    {
+      "id": "phase-1-foundations-infrastructure-identity-data-safety",
+      "heading": "Phase 1 — Foundations: Infrastructure, Identity & Data Safety",
+      "label": "Phase 1",
+      "title": "Foundations: Infrastructure, Identity & Data Safety",
+      "items": [
+        {
+          "id": "phase-1-foundations-infrastructure-identity-data-safety--managed-application-platform-provisioning",
+          "text": "Managed application platform provisioning",
+          "rawText": "Managed application platform provisioning",
+          "sourceLine": 11
+        },
+        {
+          "id": "phase-1-foundations-infrastructure-identity-data-safety--infrastructure-as-code-iac-with-remote-state-locking",
+          "text": "Infrastructure as Code (IaC) with remote state locking",
+          "rawText": "Infrastructure as Code (IaC) with remote state locking",
+          "sourceLine": 12
+        },
+        {
+          "id": "phase-1-foundations-infrastructure-identity-data-safety--automated-database-backups-continuous-point-in-time-recovery-pitr",
+          "text": "Automated database backups & continuous Point-in-Time Recovery (PITR)",
+          "rawText": "Automated database backups & continuous Point-in-Time Recovery (PITR)",
+          "sourceLine": 13
+        },
+        {
+          "id": "phase-1-foundations-infrastructure-identity-data-safety--centralized-secret-management-no-plaintext-env-files",
+          "text": "Centralized secret management (no plaintext `.env` files)",
+          "rawText": "Centralized secret management (no plaintext `.env` files)",
+          "sourceLine": 14
+        },
+        {
+          "id": "phase-1-foundations-infrastructure-identity-data-safety--organization-wide-2fa-enforcement",
+          "text": "Organization-wide 2FA enforcement",
+          "rawText": "Organization-wide 2FA enforcement",
+          "sourceLine": 15
+        },
+        {
+          "id": "phase-1-foundations-infrastructure-identity-data-safety--environment-isolation-staging-and-production",
+          "text": "Environment isolation (Staging and Production)",
+          "rawText": "Environment isolation (Staging and Production)",
+          "sourceLine": 16
+        }
+      ],
+      "sourceLine": 9
+    },
+    {
+      "id": "phase-2-quality-ci-pipeline-gating",
+      "heading": "Phase 2 — Quality & CI Pipeline Gating",
+      "label": "Phase 2",
+      "title": "Quality & CI Pipeline Gating",
+      "items": [
+        {
+          "id": "phase-2-quality-ci-pipeline-gating--trunk-branch-protections-code-review-enforcement",
+          "text": "Trunk branch protections & code review enforcement",
+          "rawText": "Trunk branch protections & code review enforcement",
+          "sourceLine": 20
+        },
+        {
+          "id": "phase-2-quality-ci-pipeline-gating--automated-ci-pipeline-with-sub-5-minute-feedback-loop",
+          "text": "Automated CI pipeline with sub-5-minute feedback loop",
+          "rawText": "Automated CI pipeline with sub-5-minute feedback loop",
+          "sourceLine": 21
+        },
+        {
+          "id": "phase-2-quality-ci-pipeline-gating--automated-secret-scanning-pre-commit-push-hooks",
+          "text": "Automated secret scanning (pre-commit & push hooks)",
+          "rawText": "Automated secret scanning (pre-commit & push hooks)",
+          "sourceLine": 22
+        },
+        {
+          "id": "phase-2-quality-ci-pipeline-gating--dependency-lockfile-pinning-vulnerability-scans-sca",
+          "text": "Dependency lockfile pinning & vulnerability scans (SCA)",
+          "rawText": "Dependency lockfile pinning & vulnerability scans (SCA)",
+          "sourceLine": 23
+        },
+        {
+          "id": "phase-2-quality-ci-pipeline-gating--automated-core-integration-api-tests",
+          "text": "Automated core integration & API tests",
+          "rawText": "Automated core integration & API tests",
+          "sourceLine": 24
+        },
+        {
+          "id": "phase-2-quality-ci-pipeline-gating--container-image-scanning-secure-registry-controls",
+          "text": "Container image scanning & secure registry controls",
+          "rawText": "Container image scanning & secure registry controls",
+          "sourceLine": 25
+        }
+      ],
+      "sourceLine": 18
+    },
+    {
+      "id": "phase-3-observability-sre-mechanics",
+      "heading": "Phase 3 — Observability & SRE Mechanics",
+      "label": "Phase 3",
+      "title": "Observability & SRE Mechanics",
+      "items": [
+        {
+          "id": "phase-3-observability-sre-mechanics--centralized-application-exception-tracking",
+          "text": "Centralized application exception tracking",
+          "rawText": "Centralized application exception tracking",
+          "sourceLine": 29
+        },
+        {
+          "id": "phase-3-observability-sre-mechanics--structured-json-logging-with-request-correlation-ids",
+          "text": "Structured JSON logging with request correlation IDs",
+          "rawText": "Structured JSON logging with request correlation IDs",
+          "sourceLine": 30
+        },
+        {
+          "id": "phase-3-observability-sre-mechanics--external-uptime-monitoring-basic-health-checks",
+          "text": "External uptime monitoring & basic health checks",
+          "rawText": "External uptime monitoring & basic health checks",
+          "sourceLine": 31
+        },
+        {
+          "id": "phase-3-observability-sre-mechanics--golden-signals-slis-slo-tracking-p95-p99-latency",
+          "text": "Golden Signals, SLIs & SLO tracking (p95/p99 latency)",
+          "rawText": "Golden Signals, SLIs & SLO tracking (p95/p99 latency)",
+          "sourceLine": 32
+        },
+        {
+          "id": "phase-3-observability-sre-mechanics--on-call-rotation-paging-escalation-paths",
+          "text": "On-call rotation & paging escalation paths",
+          "rawText": "On-call rotation & paging escalation paths",
+          "sourceLine": 33
+        },
+        {
+          "id": "phase-3-observability-sre-mechanics--empirical-database-restore-drill-execution",
+          "text": "Empirical database restore drill execution",
+          "rawText": "Empirical database restore drill execution",
+          "sourceLine": 34
+        }
+      ],
+      "sourceLine": 27
+    },
+    {
+      "id": "phase-4-safe-release-engineering-edge-cost-controls",
+      "heading": "Phase 4 — Safe Release Engineering, Edge & Cost Controls",
+      "label": "Phase 4",
+      "title": "Safe Release Engineering, Edge & Cost Controls",
+      "items": [
+        {
+          "id": "phase-4-safe-release-engineering-edge-cost-controls--backward-compatible-database-migrations-expand-and-contract",
+          "text": "Backward-compatible database migrations (expand-and-contract)",
+          "rawText": "Backward-compatible database migrations (expand-and-contract)",
+          "sourceLine": 38
+        },
+        {
+          "id": "phase-4-safe-release-engineering-edge-cost-controls--documented-rollback-procedure-one-click-reverts",
+          "text": "Documented rollback procedure & one-click reverts",
+          "rawText": "Documented rollback procedure & one-click reverts",
+          "sourceLine": 39
+        },
+        {
+          "id": "phase-4-safe-release-engineering-edge-cost-controls--progressive-delivery-canary-rollouts-feature-flags",
+          "text": "Progressive delivery (canary rollouts/feature flags)",
+          "rawText": "Progressive delivery (canary rollouts/feature flags)",
+          "sourceLine": 40
+        },
+        {
+          "id": "phase-4-safe-release-engineering-edge-cost-controls--edge-security-waf-ingress-rate-limiting",
+          "text": "Edge security, WAF & ingress rate limiting",
+          "rawText": "Edge security, WAF & ingress rate limiting",
+          "sourceLine": 41
+        },
+        {
+          "id": "phase-4-safe-release-engineering-edge-cost-controls--cloud-finops-spend-ceilings-budget-alerts",
+          "text": "Cloud FinOps spend ceilings & budget alerts",
+          "rawText": "Cloud FinOps spend ceilings & budget alerts",
+          "sourceLine": 42
+        }
+      ],
+      "sourceLine": 36
+    }
+  ],
+  "readinessGate": {
+    "heading": "Production Readiness Gate",
+    "intro": "Before calling the system **production-ready**, confirm:",
+    "criteria": [
+      {
+        "id": "readiness--infrastructure-is-provisioned-declaratively-via-iac-with-remote-state-locking",
+        "text": "Infrastructure is provisioned declaratively via IaC with remote state locking",
+        "rawText": "Infrastructure is provisioned declaratively via IaC with remote state locking",
+        "sourceLine": 48
+      },
+      {
+        "id": "readiness--database-point-in-time-recovery-pitr-is-active-and-an-initial-restore-drill-has-passed",
+        "text": "Database Point-in-Time Recovery (PITR) is active, and an initial restore drill has passed",
+        "rawText": "Database Point-in-Time Recovery (PITR) is active, and an initial restore drill has passed",
+        "sourceLine": 49
+      },
+      {
+        "id": "readiness--secrets-are-centralized-in-a-dedicated-vault-zero-plain-text-production-secrets-in-repos",
+        "text": "Secrets are centralized in a dedicated vault; zero plain-text production secrets in repos",
+        "rawText": "Secrets are centralized in a dedicated vault; zero plain-text production secrets in repos",
+        "sourceLine": 50
+      },
+      {
+        "id": "readiness--2fa-is-enforced-across-cloud-repository-and-saas-tooling",
+        "text": "2FA is enforced across cloud, repository, and SaaS tooling",
+        "rawText": "2FA is enforced across cloud, repository, and SaaS tooling",
+        "sourceLine": 51
+      },
+      {
+        "id": "readiness--code-cannot-be-pushed-directly-to-production-trunk-branches",
+        "text": "Code cannot be pushed directly to production trunk branches",
+        "rawText": "Code cannot be pushed directly to production trunk branches",
+        "sourceLine": 52
+      },
+      {
+        "id": "readiness--pull-requests-have-automated-ci-checks-completing-in-under-5-minutes",
+        "text": "Pull requests have automated CI checks completing in under 5 minutes",
+        "rawText": "Pull requests have automated CI checks completing in under 5 minutes",
+        "sourceLine": 53
+      },
+      {
+        "id": "readiness--dependencies-are-pinned-and-scanned-for-known-vulnerabilities",
+        "text": "Dependencies are pinned and scanned for known vulnerabilities",
+        "rawText": "Dependencies are pinned and scanned for known vulnerabilities",
+        "sourceLine": 54
+      },
+      {
+        "id": "readiness--critical-business-paths-have-automated-integration-e2e-coverage",
+        "text": "Critical business paths have automated integration/E2E coverage",
+        "rawText": "Critical business paths have automated integration/E2E coverage",
+        "sourceLine": 55
+      },
+      {
+        "id": "readiness--containers-are-built-from-minimal-images-and-scanned-for-vulnerabilities",
+        "text": "Containers are built from minimal images and scanned for vulnerabilities",
+        "rawText": "Containers are built from minimal images and scanned for vulnerabilities",
+        "sourceLine": 56
+      },
+      {
+        "id": "readiness--application-exceptions-are-monitored-with-real-time-alerting",
+        "text": "Application exceptions are monitored with real-time alerting",
+        "rawText": "Application exceptions are monitored with real-time alerting",
+        "sourceLine": 57
+      },
+      {
+        "id": "readiness--structured-logs-are-centralized-and-searchable-via-correlation-ids",
+        "text": "Structured logs are centralized and searchable via correlation IDs",
+        "rawText": "Structured logs are centralized and searchable via correlation IDs",
+        "sourceLine": 58
+      },
+      {
+        "id": "readiness--golden-signal-metrics-p95-p99-latency-error-rates-and-uptime-probes-are-active",
+        "text": "Golden signal metrics (p95/p99 latency, error rates) and uptime probes are active",
+        "rawText": "Golden signal metrics (p95/p99 latency, error rates) and uptime probes are active",
+        "sourceLine": 59
+      },
+      {
+        "id": "readiness--on-call-escalation-paths-and-runbooks-are-documented",
+        "text": "On-call escalation paths and runbooks are documented",
+        "rawText": "On-call escalation paths and runbooks are documented",
+        "sourceLine": 60
+      },
+      {
+        "id": "readiness--releases-support-backward-compatible-migrations-and-fast-one-click-rollback",
+        "text": "Releases support backward-compatible migrations and fast one-click rollback",
+        "rawText": "Releases support backward-compatible migrations and fast one-click rollback",
+        "sourceLine": 61
+      },
+      {
+        "id": "readiness--public-ingress-endpoints-are-protected-by-rate-limiting-and-waf",
+        "text": "Public ingress endpoints are protected by rate limiting and WAF",
+        "rawText": "Public ingress endpoints are protected by rate limiting and WAF",
+        "sourceLine": 62
+      },
+      {
+        "id": "readiness--cloud-billing-budget-alerts-and-auto-scaling-limits-are-configured",
+        "text": "Cloud billing budget alerts and auto-scaling limits are configured",
+        "rawText": "Cloud billing budget alerts and auto-scaling limits are configured",
+        "sourceLine": 63
+      }
+    ]
+  },
+  "notes": {
+    "heading": "Notes & Decisions",
+    "noteSections": [
+      {
+        "id": "architecture-notes",
+        "heading": "Architecture Notes",
+        "prompt": "Add infrastructure decisions, diagrams, constraints, and important assumptions here."
+      },
+      {
+        "id": "security-notes",
+        "heading": "Security Notes",
+        "prompt": "Add security exceptions, access-control decisions, secret-rotation policies, and audit findings here."
+      },
+      {
+        "id": "incident-recovery-notes",
+        "heading": "Incident / Recovery Notes",
+        "prompt": "Record backup-restore tests, rollback tests, incidents, RCA links, and lessons learned here."
+      }
+    ],
+    "openIssuesHeading": "Open Issues",
+    "openIssues": [
+      {
+        "id": "open-issues--item-1",
+        "text": "",
+        "rawText": "",
+        "sourceLine": 81
+      },
+      {
+        "id": "open-issues--item-2",
+        "text": "",
+        "rawText": "",
+        "sourceLine": 82
+      },
+      {
+        "id": "open-issues--item-3",
+        "text": "",
+        "rawText": "",
+        "sourceLine": 83
+      }
+    ],
+    "usefulLinksHeading": "Useful Links",
+    "usefulLinks": [
+      {
+        "id": "repository",
+        "label": "Repository",
+        "value": ""
+      },
+      {
+        "id": "ci-cd",
+        "label": "CI/CD",
+        "value": ""
+      },
+      {
+        "id": "infrastructure-repository",
+        "label": "Infrastructure repository",
+        "value": ""
+      },
+      {
+        "id": "monitoring",
+        "label": "Monitoring",
+        "value": ""
+      },
+      {
+        "id": "logging",
+        "label": "Logging",
+        "value": ""
+      },
+      {
+        "id": "error-tracking",
+        "label": "Error tracking",
+        "value": ""
+      },
+      {
+        "id": "backup-dr-documentation",
+        "label": "Backup/DR documentation",
+        "value": ""
+      },
+      {
+        "id": "incident-runbook",
+        "label": "Incident runbook",
+        "value": ""
+      },
+      {
+        "id": "architecture-diagram",
+        "label": "Architecture diagram",
+        "value": ""
+      }
+    ]
+  }
+}

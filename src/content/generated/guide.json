@@ -1,0 +1,555 @@
+{
+  "title": "DevOps Implementation Guide",
+  "objective": {
+    "heading": "Objective",
+    "leadParagraph": "Use this checklist to establish a lean, reliable, secure, and production-ready DevOps foundation without over-engineering or unnecessary infrastructure complexity.",
+    "principlesLabel": "Operating principles",
+    "principles": [
+      {
+        "id": "speed-developer-velocity",
+        "term": "Speed & Developer Velocity",
+        "detail": "Fast feedback loops that keep engineers shipping code safely."
+      },
+      {
+        "id": "simplicity-first",
+        "term": "Simplicity First",
+        "detail": "Low operational overhead over complex toolchains."
+      },
+      {
+        "id": "automated-quality-gates",
+        "term": "Automated Quality Gates",
+        "detail": "Catch errors in CI/CD rather than in production."
+      },
+      {
+        "id": "security-by-default",
+        "term": "Security by Default",
+        "detail": "Shift-left security without slowing down delivery."
+      },
+      {
+        "id": "observable-systems",
+        "term": "Observable Systems",
+        "detail": "High-visibility metrics, logs, and traces for rapid debugging."
+      },
+      {
+        "id": "resilience-recovery",
+        "term": "Resilience & Recovery",
+        "detail": "Reliable backups, safe rollbacks, and non-breaking migrations."
+      }
+    ],
+    "closingParagraph": "Use this checklist to establish a lean, reliable, secure, and production-ready DevOps foundation without unnecessary infrastructure complexity."
+  },
+  "categories": [
+    {
+      "id": "1-source-code-management-ci-cd",
+      "heading": "1. Source Code Management & CI/CD",
+      "ordinal": "1",
+      "title": "Source Code Management & CI/CD",
+      "practices": [
+        {
+          "id": "branch-protections-single-pr-approvals",
+          "categoryId": "1-source-code-management-ci-cd",
+          "heading": "Branch Protections & Single PR Approvals",
+          "headingRaw": "Branch Protections & Single PR Approvals",
+          "checkboxLabel": "Implementation complete",
+          "description": "Enforce branch protection on `main`/`master`. Prohibit direct pushes and require at least one peer code review before merging.",
+          "whyItMatters": "Prevents broken builds or accidental code overwrites in production without slowing down developer flow.",
+          "keyConcepts": [
+            "GitHub/GitLab/Bitbucket branch protection",
+            "Single reviewer rule",
+            "Squash merging"
+          ],
+          "recommendedTools": "GitHub / GitLab / Bitbucket",
+          "verificationGate": "Attempt a direct push to `main` using Git CLI. The push must be rejected.",
+          "sourceOrder": 1,
+          "orderInCategory": 1,
+          "sourceLine": 20
+        },
+        {
+          "id": "automated-ci-pipelines-for-main-pull-requests",
+          "categoryId": "1-source-code-management-ci-cd",
+          "heading": "Automated CI Pipelines for Main & Pull Requests",
+          "headingRaw": "Automated CI Pipelines for Main & Pull Requests",
+          "checkboxLabel": "Implementation complete",
+          "description": "Run automated build, lint, and unit-test checks on every pull request and main-branch commit.",
+          "whyItMatters": "Catches breaking changes before they reach staging or production.",
+          "keyConcepts": [
+            "GitHub Actions / CircleCI",
+            "Fast feedback loop — target under 5 minutes",
+            "Parallel testing"
+          ],
+          "recommendedTools": "GitHub Actions / Vercel Builds / CircleCI",
+          "verificationGate": "Open a PR with a deliberately broken test. CI must fail and block merging.",
+          "sourceOrder": 2,
+          "orderInCategory": 2,
+          "sourceLine": 32
+        },
+        {
+          "id": "automated-secret-scanning-in-ci-pre-commit-hooks",
+          "categoryId": "1-source-code-management-ci-cd",
+          "heading": "Automated Secret Scanning in CI & Pre-Commit Hooks",
+          "headingRaw": "Automated Secret Scanning in CI & Pre-Commit Hooks",
+          "checkboxLabel": "Implementation complete",
+          "description": "Scan code for API keys, tokens, database credentials, certificates, and other secrets before pushing code.",
+          "whyItMatters": "Prevents credentials from reaching repositories and reduces the risk of infrastructure compromise.",
+          "keyConcepts": [
+            "Gitleaks / TruffleHog",
+            "Pre-commit hooks",
+            "Repository push protection"
+          ],
+          "recommendedTools": "Gitleaks / TruffleHog / GitGuardian",
+          "verificationGate": "Commit a dummy high-entropy secret-like value. The scanner must trigger an alert/block.",
+          "sourceOrder": 3,
+          "orderInCategory": 3,
+          "sourceLine": 44
+        },
+        {
+          "id": "backward-compatible-database-migrations-expand-and-contract",
+          "categoryId": "1-source-code-management-ci-cd",
+          "heading": "Backward-Compatible Database Migrations (Expand and Contract)",
+          "headingRaw": "Backward-Compatible Database Migrations (Expand and Contract)",
+          "checkboxLabel": "Implementation complete",
+          "description": "Enforce safe schema evolution where database changes are decoupled from code releases (e.g., adding a column before using it, never dropping columns/tables in the same release).",
+          "whyItMatters": "Prevents application errors during rollbacks and ensures zero-downtime schema updates.",
+          "keyConcepts": [
+            "Expand-and-contract pattern",
+            "Non-breaking migrations",
+            "Decoupled deployments"
+          ],
+          "recommendedTools": "Prisma Migrate / Alembic / Flyway / native ORM migration tools",
+          "verificationGate": "Simulate a rollback from Code Version N+1 to Version N while running the new schema. The older version must still function without errors.",
+          "sourceOrder": 4,
+          "orderInCategory": 4,
+          "sourceLine": 56
+        },
+        {
+          "id": "progressive-delivery-canary-deployments-optional-for-startup",
+          "categoryId": "1-source-code-management-ci-cd",
+          "heading": "Progressive Delivery & Canary Deployments (Optional For Startup)",
+          "headingRaw": "Progressive Delivery & Canary Deployments (Optional For Startup)",
+          "checkboxLabel": "Implementation complete",
+          "description": "Implement progressive rollout mechanics (canary deployments, blue-green cutovers, or dynamic feature flags) rather than routing 100% of production traffic to new code immediately.",
+          "whyItMatters": "Limits blast radius. If a regression escapes CI, only a small percentage of users are impacted while automated gates detect degradation and roll back safely.",
+          "keyConcepts": [
+            "Canary rollouts (e.g., 5% → 25% → 100%)",
+            "Feature flag decoupling",
+            "Automated metric-based rollbacks"
+          ],
+          "recommendedTools": "LaunchDarkly / Unleash / Argo Rollouts / Flagger / Cloud platform traffic splitting",
+          "verificationGate": "Deploy a release configured to route 10% of traffic to a canary build; verify traffic splits accurately and automated rollback triggers if canary metrics fail.",
+          "sourceOrder": 5,
+          "orderInCategory": 5,
+          "sourceLine": 68
+        }
+      ],
+      "sourceLine": 18
+    },
+    {
+      "id": "2-infrastructure",
+      "heading": "2. Infrastructure",
+      "ordinal": "2",
+      "title": "Infrastructure",
+      "practices": [
+        {
+          "id": "managed-application-platforms",
+          "categoryId": "2-infrastructure",
+          "heading": "Managed Application Platforms",
+          "headingRaw": "Managed Application Platforms",
+          "checkboxLabel": "Implementation complete",
+          "description": "Prefer managed application platforms, managed containers, PaaS, or managed Kubernetes over manually maintaining raw virtual machines when practical.",
+          "whyItMatters": "Reduces OS patching, load-balancer, hardware, and platform-maintenance overhead.",
+          "keyConcepts": [
+            "PaaS",
+            "Automated HTTPS",
+            "Managed containers"
+          ],
+          "recommendedTools": "Vercel / Render / managed Kubernetes / equivalent platform",
+          "verificationGate": "Verify the application can scale according to platform capabilities and TLS certificates are renewed automatically.",
+          "sourceOrder": 6,
+          "orderInCategory": 1,
+          "sourceLine": 82
+        },
+        {
+          "id": "infrastructure-as-code",
+          "categoryId": "2-infrastructure",
+          "heading": "Infrastructure as Code",
+          "headingRaw": "Infrastructure as Code",
+          "checkboxLabel": "Implementation complete",
+          "description": "Provision databases, object storage, DNS, networking, and other infrastructure using declarative IaC.",
+          "whyItMatters": "Eliminates ClickOps errors and allows environments to be recreated consistently.",
+          "keyConcepts": [
+            "Terraform / CloudFormation",
+            "Remote state and locking",
+            "No ClickOps"
+          ],
+          "recommendedTools": "Terraform / CloudFormation / Pulumi",
+          "verificationGate": "Run `terraform plan` and confirm production infrastructure is represented in code/state.",
+          "sourceOrder": 7,
+          "orderInCategory": 2,
+          "sourceLine": 94
+        },
+        {
+          "id": "isolated-staging-production-environments-staging-env-is-optional-for-the-startup-or-small-company",
+          "categoryId": "2-infrastructure",
+          "heading": "Isolated Staging & Production Environments (Staging Env is Optional for the Startup or small company)",
+          "headingRaw": "Isolated Staging & Production Environments (Staging Env is Optional for the Startup or small company)",
+          "checkboxLabel": "Implementation complete",
+          "description": "Maintain isolated staging and production environments with separate databases, credentials, secrets, and configuration.",
+          "whyItMatters": "Prevents testing, migrations, or experiments from corrupting real customer data.",
+          "keyConcepts": [
+            "Environment parity",
+            "Database isolation",
+            "Runtime environment variables"
+          ],
+          "recommendedTools": "Separate cloud projects/accounts, isolated platform environments, separate database instances",
+          "verificationGate": "Verify that staging cannot connect to the production database.",
+          "sourceOrder": 8,
+          "orderInCategory": 3,
+          "sourceLine": 106
+        },
+        {
+          "id": "edge-security-waf-ingress-rate-limiting-optional-for-startup",
+          "categoryId": "2-infrastructure",
+          "heading": "Edge Security, WAF & Ingress Rate Limiting (Optional For Startup)",
+          "headingRaw": "Edge Security, WAF & Ingress Rate Limiting (Optional For Startup)",
+          "checkboxLabel": "Implementation complete",
+          "description": "Enforce edge protection, Web Application Firewall (WAF) filtering, and API gateway rate limiting on all public ingress points.",
+          "whyItMatters": "Prevents brute-force attacks, credential stuffing, distributed denial of service (DDoS), and aggressive web scrapers from exhausting backend compute.",
+          "keyConcepts": [
+            "Token-bucket / sliding-window rate limiting",
+            "Managed WAF rulesets (OWASP Top 10)",
+            "Automated DDoS protection"
+          ],
+          "recommendedTools": "Cloudflare / AWS WAF / Fastly / Envoy Gateway",
+          "verificationGate": "Execute an automated script exceeding the allowed request threshold against an API endpoint; the gateway must return HTTP 429 Too Many Requests.",
+          "sourceOrder": 9,
+          "orderInCategory": 4,
+          "sourceLine": 118
+        },
+        {
+          "id": "cloud-finops-guardrails-budget-ceilings",
+          "categoryId": "2-infrastructure",
+          "heading": "Cloud FinOps Guardrails & Budget Ceilings",
+          "headingRaw": "Cloud FinOps Guardrails & Budget Ceilings",
+          "checkboxLabel": "Implementation complete",
+          "description": "Establish explicit cloud spending alerts, hard quota ceilings, and auto-scaling instance caps across all cloud accounts.",
+          "whyItMatters": "Prevents accidental billing spikes caused by runaway cloud jobs, misconfigured auto-scaling policies, or denial-of-wallet incidents.",
+          "keyConcepts": [
+            "Tiered budget threshold alerts (50%, 75%, 90%, 100%)",
+            "Auto-scaling instance ceilings",
+            "Anomaly spend detection"
+          ],
+          "recommendedTools": "AWS Budgets / GCP Cloud Billing Alerts / Infracost / Vantage",
+          "verificationGate": "Set a deliberate test billing notification threshold near current spend and verify automated notification arrives in the engineering alerting channel.",
+          "sourceOrder": 10,
+          "orderInCategory": 5,
+          "sourceLine": 130
+        }
+      ],
+      "sourceLine": 80
+    },
+    {
+      "id": "3-testing-quality",
+      "heading": "3. Testing & Quality",
+      "ordinal": "3",
+      "title": "Testing & Quality",
+      "practices": [
+        {
+          "id": "automated-core-integration-api-tests",
+          "categoryId": "3-testing-quality",
+          "heading": "Automated Core Integration & API Tests",
+          "headingRaw": "Automated Core Integration & API Tests",
+          "checkboxLabel": "Implementation complete",
+          "description": "Implement integration and end-to-end tests for critical business flows such as signup, authentication, checkout, and other revenue-generating paths.",
+          "whyItMatters": "Protects critical functionality during frequent deployments.",
+          "keyConcepts": [
+            "End-to-end testing",
+            "API integration testing",
+            "Critical-path coverage"
+          ],
+          "recommendedTools": "Playwright / Vitest / Postman CLI",
+          "verificationGate": "Run the E2E/integration suite against staging before promoting a production release.",
+          "sourceOrder": 11,
+          "orderInCategory": 1,
+          "sourceLine": 144
+        },
+        {
+          "id": "pinned-dependencies-automated-security-audits-optional-for-startup",
+          "categoryId": "3-testing-quality",
+          "heading": "Pinned Dependencies & Automated Security Audits (Optional For Startup)",
+          "headingRaw": "Pinned Dependencies & Automated Security Audits (Optional For Startup)",
+          "checkboxLabel": "Implementation complete",
+          "description": "Lock dependency versions and automate recurring dependency vulnerability scans.",
+          "whyItMatters": "Prevents unexpected breakage from transitive dependency updates and identifies vulnerable packages.",
+          "keyConcepts": [
+            "Lockfiles",
+            "Dependabot / Renovate",
+            "Software Composition Analysis"
+          ],
+          "recommendedTools": "GitHub Dependabot / Snyk / Trivy",
+          "verificationGate": "Confirm the appropriate lockfile exists and automated dependency security alerts are enabled.",
+          "sourceOrder": 12,
+          "orderInCategory": 2,
+          "sourceLine": 156
+        }
+      ],
+      "sourceLine": 142
+    },
+    {
+      "id": "4-security",
+      "heading": "4. Security",
+      "ordinal": "4",
+      "title": "Security",
+      "practices": [
+        {
+          "id": "centralized-secret-environment-variable-management-implement-in-startup-if-they-want-more-security",
+          "categoryId": "4-security",
+          "heading": "Centralized Secret & Environment Variable Management (Implement in Startup, if they want more security)",
+          "headingRaw": "Centralized Secret & Environment Variable Management (Implement in Startup, if they want more security)",
+          "checkboxLabel": "Implementation complete",
+          "description": "Store secrets in a centralized secret-management system rather than hardcoded `.env` files or source code.",
+          "whyItMatters": "Enables secure access, controlled rotation, and prevents credentials from being shared in plain text.",
+          "keyConcepts": [
+            "Secret vault",
+            "Environment injection",
+            "Secret rotation"
+          ],
+          "recommendedTools": "Doppler / Infisical / platform-native secret manager",
+          "verificationGate": "Confirm real production secrets are not committed to repositories or stored on developer machines unnecessarily.",
+          "sourceOrder": 13,
+          "orderInCategory": 1,
+          "sourceLine": 170
+        },
+        {
+          "id": "enforced-two-factor-authentication",
+          "categoryId": "4-security",
+          "heading": "Enforced Two-Factor Authentication",
+          "headingRaw": "Enforced Two-Factor Authentication",
+          "checkboxLabel": "Implementation complete",
+          "description": "Mandate hardware-key or TOTP-based 2FA across source control, infrastructure, cloud, communication, and other critical SaaS tools.",
+          "whyItMatters": "Reduces the risk of account takeover and phishing-based infrastructure compromise.",
+          "keyConcepts": [
+            "TOTP / security keys",
+            "Organization-wide 2FA enforcement",
+            "Least-privilege access"
+          ],
+          "recommendedTools": "1Password / Google Authenticator / Okta/hardware security keys",
+          "verificationGate": "Check administrative dashboards and confirm 2FA enforcement is active for all users where supported.",
+          "sourceOrder": 14,
+          "orderInCategory": 2,
+          "sourceLine": 182
+        },
+        {
+          "id": "automated-container-binary-vulnerability-scanning",
+          "categoryId": "4-security",
+          "heading": "Automated Container & Binary Vulnerability Scanning",
+          "headingRaw": "Automated Container & Binary Vulnerability Scanning",
+          "checkboxLabel": "Implementation complete",
+          "description": "Scan container images for OS-package and dependency vulnerabilities before deployment.",
+          "whyItMatters": "Identifies critical Linux and application vulnerabilities before they reach production.",
+          "keyConcepts": [
+            "Container scanning",
+            "CVE severity thresholds",
+            "Minimal/distroless images"
+          ],
+          "recommendedTools": "Trivy / Docker Scout / equivalent registry scanner",
+          "verificationGate": "Build an image with a known outdated base package and verify that the scanner reports the vulnerability.",
+          "sourceOrder": 15,
+          "orderInCategory": 3,
+          "sourceLine": 194
+        },
+        {
+          "id": "secure-container-registries-access-control",
+          "categoryId": "4-security",
+          "heading": "Secure Container Registries & Access Control",
+          "headingRaw": "Secure Container Registries & Access Control",
+          "checkboxLabel": "Implementation complete",
+          "description": "Secure your container registries with strict least-privilege access, short-lived tokens, and vulnerability gating before push/pull.",
+          "whyItMatters": "Prevents unauthorized tampering with production images or malicious code injection into your deployment pipeline.",
+          "keyConcepts": [
+            "Private registry IAM",
+            "Short-lived registry credentials",
+            "Image signing/provenance"
+          ],
+          "recommendedTools": "AWS ECR / GitHub Packages (GHCR) / Docker Hub private repositories",
+          "verificationGate": "Attempt to pull a production container image using an expired or unauthenticated token; the request must be denied.",
+          "sourceOrder": 16,
+          "orderInCategory": 4,
+          "sourceLine": 206
+        }
+      ],
+      "sourceLine": 168
+    },
+    {
+      "id": "5-observability-optional-for-startup",
+      "heading": "5. Observability (Optional For Startup)",
+      "ordinal": "5",
+      "title": "Observability (Optional For Startup)",
+      "practices": [
+        {
+          "id": "centralized-application-exception-tracking",
+          "categoryId": "5-observability-optional-for-startup",
+          "heading": "Centralized Application Exception Tracking",
+          "headingRaw": "Centralized Application Exception Tracking",
+          "checkboxLabel": "Implementation complete",
+          "description": "Instrument backend and frontend applications with real-time exception tracking.",
+          "whyItMatters": "Gives engineers stack traces, release context, and alerts when users encounter failures.",
+          "keyConcepts": [
+            "Exception monitoring",
+            "Stack-trace inspection",
+            "Release correlation"
+          ],
+          "recommendedTools": "Sentry / Rollbar / Highlight.io",
+          "verificationGate": "Trigger a controlled unhandled error in staging and confirm the alert arrives in the configured notification channel.",
+          "sourceOrder": 17,
+          "orderInCategory": 1,
+          "sourceLine": 220
+        },
+        {
+          "id": "structured-log-aggregation-search",
+          "categoryId": "5-observability-optional-for-startup",
+          "heading": "Structured Log Aggregation & Search",
+          "headingRaw": "Structured Log Aggregation & Search",
+          "checkboxLabel": "Implementation complete",
+          "description": "Emit structured JSON logs and aggregate them in a centralized log platform.",
+          "whyItMatters": "Enables fast troubleshooting without SSH access to individual servers or containers.",
+          "keyConcepts": [
+            "JSON logging",
+            "Correlation/request IDs",
+            "Centralized log search"
+          ],
+          "recommendedTools": "Datadog / Better Stack / Logtail / Grafana Loki",
+          "verificationGate": "Query the logging platform for a specific `request_id` and confirm all related logs can be correlated.",
+          "sourceOrder": 18,
+          "orderInCategory": 2,
+          "sourceLine": 232
+        },
+        {
+          "id": "uptime-monitoring-basic-paging-alerts",
+          "categoryId": "5-observability-optional-for-startup",
+          "heading": "Uptime Monitoring & Basic Paging Alerts",
+          "headingRaw": "Uptime Monitoring & Basic Paging Alerts",
+          "checkboxLabel": "Implementation complete",
+          "description": "Configure external uptime checks for primary application endpoints with immediate notifications for outages.",
+          "whyItMatters": "Helps the team detect incidents before customers report them.",
+          "keyConcepts": [
+            "Synthetic HTTP health checks",
+            "Incident escalation",
+            "Status page"
+          ],
+          "recommendedTools": "UptimeRobot / Better Stack / Pingdom",
+          "verificationGate": "Simulate a `503` response from the health endpoint and confirm the configured on-call notification is triggered.",
+          "sourceOrder": 19,
+          "orderInCategory": 3,
+          "sourceLine": 244
+        },
+        {
+          "id": "golden-signals-slis-slo-tracking",
+          "categoryId": "5-observability-optional-for-startup",
+          "heading": "Golden Signals, SLIs & SLO Tracking",
+          "headingRaw": "Golden Signals, SLIs & SLO Tracking",
+          "checkboxLabel": "Implementation complete",
+          "description": "Define and monitor Service Level Indicators (SLIs) and Service Level Objectives (SLOs) around the Four Golden Signals: Latency (p50, p95, p99), Traffic, Errors, and Saturation.",
+          "whyItMatters": "Simple HTTP pingers miss silent degradations where endpoints respond with 200 OK but suffer severe 10-second latency or partial transaction failure.",
+          "keyConcepts": [
+            "Four Golden Signals (Latency, Traffic, Errors, Saturation)",
+            "Percentile tracking (p95 / p99)",
+            "Error budget burn alerts"
+          ],
+          "recommendedTools": "Prometheus & Grafana / Datadog / OpenTelemetry / CloudWatch",
+          "verificationGate": "Simulate artificial database latency on an endpoint; verify p99 latency alerts trigger even while basic uptime checks pass.",
+          "sourceOrder": 20,
+          "orderInCategory": 4,
+          "sourceLine": 256
+        },
+        {
+          "id": "distributed-apm-opentelemetry-tracing",
+          "categoryId": "5-observability-optional-for-startup",
+          "heading": "Distributed APM & OpenTelemetry Tracing",
+          "headingRaw": "Distributed APM & OpenTelemetry Tracing",
+          "checkboxLabel": "Implementation complete",
+          "description": "Instrument microservices, asynchronous workers, and database calls with distributed tracing using standard context propagation headers.",
+          "whyItMatters": "Allows engineers to pinpoint exact cross-service latency bottlenecks and database query stalls during production incidents.",
+          "keyConcepts": [
+            "Distributed tracing",
+            "Context propagation (W3C `traceparent`)",
+            "Span analysis"
+          ],
+          "recommendedTools": "OpenTelemetry / Honeycomb / Datadog APM / Grafana Tempo",
+          "verificationGate": "Make a request touching multiple backend components and locate its complete end-to-end trace waterfall in the tracing dashboard.",
+          "sourceOrder": 21,
+          "orderInCategory": 5,
+          "sourceLine": 268
+        },
+        {
+          "id": "on-call-rotation-and-incident-routing-optional-for-startups",
+          "categoryId": "5-observability-optional-for-startup",
+          "heading": "On-Call Rotation and Incident Routing (Optional for Startups)",
+          "headingRaw": "On-Call Rotation and Incident Routing (Optional for Startups)",
+          "checkboxLabel": "Implementation complete",
+          "description": "Establish clear on-call schedules, escalation paths, and notification routing so production alerts reach the appropriate engineer promptly.",
+          "whyItMatters": "Ensures monitoring alerts aren't lost in silent Slack channels or missed after hours.",
+          "keyConcepts": [
+            "On-call schedules",
+            "Escalation policies",
+            "Alert severity levels"
+          ],
+          "recommendedTools": "PagerDuty / Opsgenie / Better Stack incident routing / Slack-Pager integration",
+          "verificationGate": "Trigger a critical alert in staging and confirm that it pages or notifies the designated on-call engineer within the target SLA.",
+          "sourceOrder": 22,
+          "orderInCategory": 6,
+          "sourceLine": 280
+        }
+      ],
+      "sourceLine": 218
+    },
+    {
+      "id": "6-disaster-recovery-optional-for-startup",
+      "heading": "6. Disaster Recovery (Optional For Startup)",
+      "ordinal": "6",
+      "title": "Disaster Recovery (Optional For Startup)",
+      "practices": [
+        {
+          "id": "automated-database-backups-point-in-time-recovery",
+          "categoryId": "6-disaster-recovery-optional-for-startup",
+          "heading": "Automated Database Backups & Point-in-Time Recovery",
+          "headingRaw": "Automated Database Backups & Point-in-Time Recovery",
+          "checkboxLabel": "Implementation complete",
+          "description": "Configure automated database backups and, where supported, continuous WAL/log archiving for point-in-time recovery.",
+          "whyItMatters": "Enables recovery from data corruption, accidental deletion, and operational mistakes with controlled data loss.",
+          "keyConcepts": [
+            "PITR — Point-in-Time Recovery",
+            "Automated snapshots",
+            "Offsite backup storage",
+            "Defined RPO/RTO"
+          ],
+          "recommendedTools": "Managed PostgreSQL/MySQL backup systems or equivalent database backup tooling",
+          "verificationGate": "Perform a restore drill into a test database and verify data integrity.",
+          "sourceOrder": 23,
+          "orderInCategory": 1,
+          "sourceLine": 294
+        },
+        {
+          "id": "documented-rollback-procedure-one-click-reverts",
+          "categoryId": "6-disaster-recovery-optional-for-startup",
+          "heading": "Documented Rollback Procedure & One-Click Reverts",
+          "headingRaw": "Documented Rollback Procedure & One-Click Reverts",
+          "checkboxLabel": "Implementation complete",
+          "description": "Ensure every production deployment can be rolled back safely to the previous stable release artifact.",
+          "whyItMatters": "Fast rollback is one of the most important safeguards for high-velocity deployments.",
+          "keyConcepts": [
+            "Immutable artifacts",
+            "Tagged container images / commit SHAs",
+            "Fast revert",
+            "Backward-compatible database migrations"
+          ],
+          "recommendedTools": "Deployment-platform rollback / Argo CD / equivalent release tooling",
+          "verificationGate": "Trigger a rollback in staging and confirm the application returns to the previous stable release within the defined target.",
+          "sourceOrder": 24,
+          "orderInCategory": 2,
+          "sourceLine": 307
+        }
+      ],
+      "sourceLine": 292
+    }
+  ]
+}

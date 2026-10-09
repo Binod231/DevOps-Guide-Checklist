@@ -1,0 +1,98 @@
+[
+  {
+    "practiceId": "branch-protections-single-pr-approvals",
+    "rowKey": "st-01--scm-ci-cd"
+  },
+  {
+    "practiceId": "automated-ci-pipelines-for-main-pull-requests",
+    "rowKey": "st-02--scm-ci-cd"
+  },
+  {
+    "practiceId": "automated-secret-scanning-in-ci-pre-commit-hooks",
+    "rowKey": "st-03--scm-ci-cd"
+  },
+  {
+    "practiceId": "backward-compatible-database-migrations-expand-and-contract",
+    "rowKey": "st-04--scm-ci-cd"
+  },
+  {
+    "practiceId": "progressive-delivery-canary-deployments-optional-for-startup",
+    "rowKey": "st-05--scm-ci-cd"
+  },
+  {
+    "practiceId": "managed-application-platforms",
+    "rowKey": "st-06--infrastructure"
+  },
+  {
+    "practiceId": "infrastructure-as-code",
+    "rowKey": "st-07--infrastructure"
+  },
+  {
+    "practiceId": "isolated-staging-production-environments-staging-env-is-optional-for-the-startup-or-small-company",
+    "rowKey": "st-08--infrastructure"
+  },
+  {
+    "practiceId": "edge-security-waf-ingress-rate-limiting-optional-for-startup",
+    "rowKey": "st-09--infrastructure"
+  },
+  {
+    "practiceId": "cloud-finops-guardrails-budget-ceilings",
+    "rowKey": "st-10--infrastructure"
+  },
+  {
+    "practiceId": "automated-core-integration-api-tests",
+    "rowKey": "st-10--testing-quality"
+  },
+  {
+    "practiceId": "pinned-dependencies-automated-security-audits-optional-for-startup",
+    "rowKey": "st-11--testing-quality"
+  },
+  {
+    "practiceId": "centralized-secret-environment-variable-management-implement-in-startup-if-they-want-more-security",
+    "rowKey": "st-12--security"
+  },
+  {
+    "practiceId": "enforced-two-factor-authentication",
+    "rowKey": "st-14--security"
+  },
+  {
+    "practiceId": "automated-container-binary-vulnerability-scanning",
+    "rowKey": "st-13--security"
+  },
+  {
+    "practiceId": "secure-container-registries-access-control",
+    "rowKey": "st-15--security"
+  },
+  {
+    "practiceId": "centralized-application-exception-tracking",
+    "rowKey": "st-16--observability"
+  },
+  {
+    "practiceId": "structured-log-aggregation-search",
+    "rowKey": "st-17--observability"
+  },
+  {
+    "practiceId": "uptime-monitoring-basic-paging-alerts",
+    "rowKey": "st-18--observability"
+  },
+  {
+    "practiceId": "golden-signals-slis-slo-tracking",
+    "rowKey": "st-19--observability"
+  },
+  {
+    "practiceId": "distributed-apm-opentelemetry-tracing",
+    "rowKey": "st-20--observability"
+  },
+  {
+    "practiceId": "on-call-rotation-and-incident-routing-optional-for-startups",
+    "rowKey": "st-21--observability"
+  },
+  {
+    "practiceId": "automated-database-backups-point-in-time-recovery",
+    "rowKey": "st-23--disaster-recovery"
+  },
+  {
+    "practiceId": "documented-rollback-procedure-one-click-reverts",
+    "rowKey": "st-22--disaster-recovery"
+  }
+]

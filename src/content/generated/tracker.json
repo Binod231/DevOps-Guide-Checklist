@@ -1,0 +1,456 @@
+{
+  "columns": [
+    {
+      "header": "S.N",
+      "field": "sn"
+    },
+    {
+      "header": "Category",
+      "field": "category"
+    },
+    {
+      "header": "Implementation Item",
+      "field": "implementationItem"
+    },
+    {
+      "header": "Implementation By",
+      "field": "implementationBy"
+    },
+    {
+      "header": "Company Stage",
+      "field": "companyStage"
+    },
+    {
+      "header": "Priority",
+      "field": "priority"
+    },
+    {
+      "header": "Status",
+      "field": "status"
+    },
+    {
+      "header": "Target Date",
+      "field": "targetDate"
+    },
+    {
+      "header": "Verification Gate",
+      "field": "verificationGate"
+    },
+    {
+      "header": "Verified",
+      "field": "verified"
+    },
+    {
+      "header": "Verified By",
+      "field": "verifiedBy"
+    }
+  ],
+  "alternateColumns": [
+    {
+      "header": "S.N",
+      "field": "sn"
+    },
+    {
+      "header": "Category",
+      "field": "category"
+    },
+    {
+      "header": "Company Stage",
+      "field": "companyStage"
+    },
+    {
+      "header": "Implementation By",
+      "field": "implementationBy"
+    },
+    {
+      "header": "Implementation Item",
+      "field": "implementationItem"
+    },
+    {
+      "header": "Priority",
+      "field": "priority"
+    },
+    {
+      "header": "Status",
+      "field": "status"
+    },
+    {
+      "header": "Target Date",
+      "field": "targetDate"
+    },
+    {
+      "header": "Verification Gate",
+      "field": "verificationGate"
+    },
+    {
+      "header": "Verified",
+      "field": "verified"
+    },
+    {
+      "header": "Verified By",
+      "field": "verifiedBy"
+    }
+  ],
+  "rows": [
+    {
+      "rowKey": "st-01--scm-ci-cd",
+      "sn": "ST-01",
+      "category": "SCM & CI/CD",
+      "implementationItem": "Branch Protections & Single PR Approvals",
+      "implementationBy": "",
+      "companyStage": "For All",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Attempt direct push to main; push must be rejected.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 1
+    },
+    {
+      "rowKey": "st-02--scm-ci-cd",
+      "sn": "ST-02",
+      "category": "SCM & CI/CD",
+      "implementationItem": "Automated CI Pipelines for Main & Pull Requests",
+      "implementationBy": "",
+      "companyStage": "For All",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Broken test must fail CI and block merge.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 2
+    },
+    {
+      "rowKey": "st-03--scm-ci-cd",
+      "sn": "ST-03",
+      "category": "SCM & CI/CD",
+      "implementationItem": "Automated Secret Scanning",
+      "implementationBy": "",
+      "companyStage": "For All",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Dummy secret-like value must trigger scanner.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 3
+    },
+    {
+      "rowKey": "st-04--scm-ci-cd",
+      "sn": "ST-04",
+      "category": "SCM & CI/CD",
+      "implementationItem": "Backward-Compatible Migrations",
+      "implementationBy": "",
+      "companyStage": "For All",
+      "priority": "P1",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Simulate a rollback from Version N+1 to Version N with the new schema; the older version must function without errors.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 4
+    },
+    {
+      "rowKey": "st-05--scm-ci-cd",
+      "sn": "ST-05",
+      "category": "SCM & CI/CD",
+      "implementationItem": "Progressive Delivery & Canary Deployments",
+      "implementationBy": "",
+      "companyStage": "Optional For Startup",
+      "priority": "P1",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Deploy a release configured to route 10% of traffic to a canary build; verify traffic splits accurately and automated rollback triggers if canary metrics fail.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 5
+    },
+    {
+      "rowKey": "st-06--infrastructure",
+      "sn": "ST-06",
+      "category": "Infrastructure",
+      "implementationItem": "Managed Application Platforms",
+      "implementationBy": "",
+      "companyStage": "For All",
+      "priority": "P1",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Verify scaling and automatic TLS management.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 6
+    },
+    {
+      "rowKey": "st-07--infrastructure",
+      "sn": "ST-07",
+      "category": "Infrastructure",
+      "implementationItem": "Infrastructure as Code",
+      "implementationBy": "",
+      "companyStage": "For All",
+      "priority": "P1",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Confirm infrastructure is tracked in IaC state.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 7
+    },
+    {
+      "rowKey": "st-08--infrastructure",
+      "sn": "ST-08",
+      "category": "Infrastructure",
+      "implementationItem": "Isolated Staging & Production",
+      "implementationBy": "",
+      "companyStage": "Optional For Startup",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Staging must not connect to production DB.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 8
+    },
+    {
+      "rowKey": "st-09--infrastructure",
+      "sn": "ST-09",
+      "category": "Infrastructure",
+      "implementationItem": "Edge Security, WAF & Ingress Rate Limiting",
+      "implementationBy": "",
+      "companyStage": "Optional For Startup",
+      "priority": "P1",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Execute an automated script exceeding the allowed request threshold against an API endpoint; the gateway must return HTTP 429 Too Many Requests.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 9
+    },
+    {
+      "rowKey": "st-10--infrastructure",
+      "sn": "ST-10",
+      "category": "Infrastructure",
+      "implementationItem": "Cloud FinOps Guardrails & Budget Ceilings",
+      "implementationBy": "",
+      "companyStage": "For All",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Set a deliberate test billing notification threshold near current spend and verify automated notification arrives in the engineering alerting channel.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 10
+    },
+    {
+      "rowKey": "st-10--testing-quality",
+      "sn": "ST-10",
+      "category": "Testing & Quality",
+      "implementationItem": "Core Integration & API Tests",
+      "implementationBy": "",
+      "companyStage": "For All",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Run critical E2E/integration tests before production.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 11
+    },
+    {
+      "rowKey": "st-11--testing-quality",
+      "sn": "ST-11",
+      "category": "Testing & Quality",
+      "implementationItem": "Pinned Dependencies & Security Audits",
+      "implementationBy": "",
+      "companyStage": "Optional For Startup",
+      "priority": "P1",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Lockfile exists and dependency alerts are enabled.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 12
+    },
+    {
+      "rowKey": "st-12--security",
+      "sn": "ST-12",
+      "category": "Security",
+      "implementationItem": "Centralized Secret Management",
+      "implementationBy": "",
+      "companyStage": "Optional For Startup",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "No real production secrets in repositories.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 13
+    },
+    {
+      "rowKey": "st-13--security",
+      "sn": "ST-13",
+      "category": "Security",
+      "implementationItem": "Container Vulnerability Scanning",
+      "implementationBy": "",
+      "companyStage": "For All",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Known vulnerable image must be detected.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 14
+    },
+    {
+      "rowKey": "st-14--security",
+      "sn": "ST-14",
+      "category": "Security",
+      "implementationItem": "Enforced Two-Factor Authentication",
+      "implementationBy": "",
+      "companyStage": "For All",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Verify 2FA enforcement across critical SaaS tools.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 15
+    },
+    {
+      "rowKey": "st-15--security",
+      "sn": "ST-15",
+      "category": "Security",
+      "implementationItem": "Secure Container Registries & Access Control",
+      "implementationBy": "",
+      "companyStage": "For All",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Attempt to pull a production container image using an expired or unauthenticated token; request must be denied.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 16
+    },
+    {
+      "rowKey": "st-16--observability",
+      "sn": "ST-16",
+      "category": "Observability",
+      "implementationItem": "Centralized Exception Tracking",
+      "implementationBy": "",
+      "companyStage": "Optional For Startup",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Controlled staging error must generate an alert.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 17
+    },
+    {
+      "rowKey": "st-17--observability",
+      "sn": "ST-17",
+      "category": "Observability",
+      "implementationItem": "Structured Log Aggregation & Search",
+      "implementationBy": "",
+      "companyStage": "Optional For Startup",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Search by request_id and correlate logs.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 18
+    },
+    {
+      "rowKey": "st-18--observability",
+      "sn": "ST-18",
+      "category": "Observability",
+      "implementationItem": "Uptime Monitoring & Paging Alerts",
+      "implementationBy": "",
+      "companyStage": "Optional For Startup",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Simulated 503 must trigger an alert.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 19
+    },
+    {
+      "rowKey": "st-19--observability",
+      "sn": "ST-19",
+      "category": "Observability",
+      "implementationItem": "Golden Signals, SLIs & SLO Tracking",
+      "implementationBy": "",
+      "companyStage": "Optional For Startup",
+      "priority": "P2",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Simulate artificial database latency on an endpoint; verify p99 latency alerts trigger even while basic uptime checks pass.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 20
+    },
+    {
+      "rowKey": "st-20--observability",
+      "sn": "ST-20",
+      "category": "Observability",
+      "implementationItem": "Distributed APM & OpenTelemetry Tracing",
+      "implementationBy": "",
+      "companyStage": "Optional For Startup",
+      "priority": "P2",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Make a request touching multiple backend components and locate its complete end-to-end trace waterfall in the tracing dashboard.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 21
+    },
+    {
+      "rowKey": "st-21--observability",
+      "sn": "ST-21",
+      "category": "Observability",
+      "implementationItem": "On-Call Rotation & Incident Routing",
+      "implementationBy": "",
+      "companyStage": "Optional For Startup",
+      "priority": "P1",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Trigger a critical alert outside working hours and confirm it pages the designated on-call engineer.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 22
+    },
+    {
+      "rowKey": "st-22--disaster-recovery",
+      "sn": "ST-22",
+      "category": "Disaster Recovery",
+      "implementationItem": "Rollback Procedure & One-Click Reverts",
+      "implementationBy": "",
+      "companyStage": "Optional For Startup",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Rollback to previous stable release successfully.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 23
+    },
+    {
+      "rowKey": "st-23--disaster-recovery",
+      "sn": "ST-23",
+      "category": "Disaster Recovery",
+      "implementationItem": "Database Backups & PITR",
+      "implementationBy": "",
+      "companyStage": "Optional For Startup",
+      "priority": "P0",
+      "status": "Not Started",
+      "targetDate": "",
+      "verificationGate": "Complete a restore drill and verify integrity.",
+      "verified": "No",
+      "verifiedBy": "",
+      "sourceOrder": 24
+    }
+  ]
+}

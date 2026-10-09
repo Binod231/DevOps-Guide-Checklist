@@ -10,7 +10,7 @@
  * substring of its source. Only test files import it, so it never reaches the
  * production bundle.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { GENERATED_DIR, PROJECT_ROOT, SOURCE_FILENAMES, sourcePath } from '../content.config';
 import { parseGuide } from '../src/content/parsers/guide';
@@ -45,7 +45,19 @@ function emit(filename: string, data: unknown): void {
 
 function main(): void {
   mkdirSync(GENERATED_DIR, { recursive: true });
-  const sources = readSources();
+
+  const requiredFiles = ['sources.json', 'guide.json', 'checklist.json', 'tracker.json', 'crosslinks.json'];
+  let sources: RawSources;
+  try {
+    sources = readSources();
+  } catch (err) {
+    const allExist = requiredFiles.every((f) => existsSync(join(GENERATED_DIR, f)));
+    if (allExist) {
+      console.log('[generate-content] Raw markdown/CSV sources not present; using pre-generated content in src/content/generated/');
+      return;
+    }
+    throw err;
+  }
 
   emit('sources.json', sources);
 
