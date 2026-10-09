@@ -326,5 +326,127 @@ describe('Admin Verification & Acknowledgement Dashboard', () => {
       expect(screen.queryByText('alice.updated@company.com')).not.toBeInTheDocument();
     });
   });
+
+  describe('User-Wise Management and Normal User Tracking Isolation', () => {
+    it('does not send normal user / self-learner local tracking checks to the admin verification queue', () => {
+      function NormalUserLocalSetup() {
+        const { setChecked } = usePortalState();
+        return (
+          <button
+            type="button"
+            onClick={() => {
+              // Self-learner / normal user ticks items locally without user sign-off acknowledgement
+              setChecked('branch-protections-single-pr-approvals', true);
+              setChecked('automated-ci-pipelines-for-main-pull-requests', true);
+            }}
+          >
+            Self-Learner Checks
+          </button>
+        );
+      }
+
+      render(
+        <AuthProvider initialRole="admin">
+          <PortalStateProvider>
+            <MemoryRouter initialEntries={['/admin']}>
+              <NormalUserLocalSetup />
+              <AdminDashboardPage />
+            </MemoryRouter>
+          </PortalStateProvider>
+        </AuthProvider>,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Self-Learner Checks' }));
+
+      // Isolation banner must be present
+      expect(screen.getByText('Normal Self-Learner Tracking Isolated:')).toBeInTheDocument();
+
+      // Pending verification queue must be completely empty
+      expect(screen.getByText('No items match your selected filters')).toBeInTheDocument();
+
+      // Switch to All Inventory tab: items exist but are labeled as self-tracked without admin verification
+      fireEvent.click(screen.getByRole('button', { name: /all inventory/i }));
+      expect(screen.getAllByText('Self-Tracked (Normal User)').length).toBeGreaterThan(0);
+      expect(
+        screen.getAllByText(/Self-tracked locally by guest or self-learner/i).length,
+      ).toBeGreaterThan(0);
+    });
+
+    it('manages team activity user-wise: filters by user, displays doing what, and verifies per user', () => {
+      function TeamMembersSetup() {
+        const { setChecked, setChecklistAcknowledgement } = usePortalState();
+        return (
+          <button
+            type="button"
+            onClick={() => {
+              // User 1: Sarah
+              setChecked('branch-protections-single-pr-approvals', true);
+              setChecklistAcknowledgement('branch-protections-single-pr-approvals', {
+                completedBy: 'sarah.lead',
+                completedAt: '2026-10-09T08:00:00.000Z',
+                notes: 'Configured required PR reviews and branch rules',
+              });
+
+              // User 2: Alex
+              setChecked('automated-ci-pipelines-for-main-pull-requests', true);
+              setChecklistAcknowledgement('automated-ci-pipelines-for-main-pull-requests', {
+                completedBy: 'alex.devops',
+                completedAt: '2026-10-09T08:30:00.000Z',
+                notes: 'Setup GitHub Actions CI workflow',
+              });
+            }}
+          >
+            Setup Team Activity
+          </button>
+        );
+      }
+
+      render(
+        <AuthProvider initialRole="admin">
+          <PortalStateProvider>
+            <MemoryRouter initialEntries={['/admin']}>
+              <TeamMembersSetup />
+              <AdminDashboardPage />
+            </MemoryRouter>
+          </PortalStateProvider>
+        </AuthProvider>,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Setup Team Activity' }));
+
+      // Manage Team User-Wise section is visible
+      expect(screen.getByRole('heading', { name: /Manage Team User-Wise/i })).toBeInTheDocument();
+
+      // User selector pills with handles exist
+      expect(screen.getByText('@sarah.lead')).toBeInTheDocument();
+      expect(screen.getByText('@alex.devops')).toBeInTheDocument();
+
+      // Item cards show which user is doing what and request for verification
+      expect(screen.getAllByText('Request for Verified').length).toBe(2);
+      expect(screen.getByText(/Configured required PR reviews and branch rules/i)).toBeInTheDocument();
+      expect(screen.getByText(/Setup GitHub Actions CI workflow/i)).toBeInTheDocument();
+
+      // Click user pill to filter specifically to sarah.lead
+      fireEvent.click(screen.getByText('@sarah.lead'));
+
+      // Active member summary card appears
+      expect(screen.getByText('Team Member: sarah.lead')).toBeInTheDocument();
+      expect(screen.getByText(/1 request for verified/i)).toBeInTheDocument();
+
+      // Sarah's item is visible, Alex's item is filtered out
+      expect(screen.getByText(/Configured required PR reviews and branch rules/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Setup GitHub Actions CI workflow/i)).not.toBeInTheDocument();
+
+      // Verify all for sarah.lead in 1 click
+      const verifyForSarahBtn = screen.getByRole('button', {
+        name: /Verify All for sarah\.lead \(1\)/i,
+      });
+      fireEvent.click(verifyForSarahBtn);
+
+      // Now sarah.lead has 0 pending, but alex.devops still has pending
+      fireEvent.click(screen.getByRole('button', { name: /view all members/i }));
+      expect(screen.getByText(/Setup GitHub Actions CI workflow/i)).toBeInTheDocument();
+    });
+  });
 });
 

@@ -174,14 +174,15 @@ export function PortalStateProvider({ children }: { children: ReactNode }) {
       // Store only ticks, so an untouched portal persists an empty map.
       if (checked) {
         next[id] = true;
-        if (!nextAcks[id]) {
+        if (defaultCompletedBy && defaultCompletedBy.trim() && !nextAcks[id]) {
           nextAcks[id] = {
-            completedBy: defaultCompletedBy || 'DevOps Contributor',
+            completedBy: defaultCompletedBy.trim(),
             completedAt: new Date().toISOString(),
           };
         }
       } else {
         delete next[id];
+        delete nextAcks[id];
       }
       return { ...current, checked: next, checklistAcknowledgements: nextAcks };
     });
@@ -193,11 +194,12 @@ export function PortalStateProvider({ children }: { children: ReactNode }) {
       const nextAcks = { ...(current.checklistAcknowledgements ?? {}) };
       if (next[id]) {
         delete next[id];
+        delete nextAcks[id];
       } else {
         next[id] = true;
-        if (!nextAcks[id]) {
+        if (defaultCompletedBy && defaultCompletedBy.trim() && !nextAcks[id]) {
           nextAcks[id] = {
-            completedBy: defaultCompletedBy || 'DevOps Contributor',
+            completedBy: defaultCompletedBy.trim(),
             completedAt: new Date().toISOString(),
           };
         }

@@ -24,6 +24,17 @@ interface UnifiedDashboardItem {
   verifiedBy: string;
   verifiedAt: string;
   verificationNotes?: string;
+  isSelfTracked?: boolean;
+}
+
+interface UserWorkSummary {
+  username: string;
+  email?: string;
+  role?: string;
+  pendingCount: number;
+  verifiedCount: number;
+  totalCompleted: number;
+  latestActivity?: string;
 }
 
 interface ManagedUserAccount {
@@ -141,13 +152,18 @@ export function AdminDashboardPage() {
     for (const row of trackerRows) {
       const rState = trackerRowState(row.rowKey);
       const rowStatus = rState.status ?? row.status ?? '';
-      const implBy = rState.implementationBy ?? row.implementationBy ?? '';
+      const implBy = (rState.implementationBy ?? row.implementationBy ?? '').trim();
+      const hasImplementer = Boolean(implBy);
       const isComplete =
         rowStatus.toLowerCase().includes('complete') ||
         rowStatus.toLowerCase().includes('implemented') ||
-        Boolean(implBy.trim());
+        hasImplementer;
       const isVerified = (rState.verified ?? row.verified)?.toLowerCase() === 'yes';
       const verBy = rState.verifiedBy ?? row.verifiedBy ?? '';
+
+      // Only items with an explicit implementer are tracked as verification requests for Admin.
+      // Normal self-learner local status edits without a team implementer do not go to the Admin.
+      const isUserRequest = hasImplementer;
 
       list.push({
         id: `tracker-${row.rowKey}`,
@@ -156,8 +172,8 @@ export function AdminDashboardPage() {
         sectionCategory: 'tracker',
         title: `${row.sn || row.rowKey}: ${row.implementationItem}`,
         route: ROUTES.tracker,
-        completed: isComplete,
-        completedBy: implBy || (isComplete ? 'DevOps Contributor' : ''),
+        completed: isUserRequest,
+        completedBy: implBy,
         completedAt: rState.targetDate ?? row.targetDate ?? '',
         userNotes: [rState.notes, rState.evidence ? `Evidence: ${rState.evidence}` : '']
           .filter(Boolean)
@@ -166,6 +182,7 @@ export function AdminDashboardPage() {
         verifiedBy: verBy,
         verifiedAt: '',
         verificationNotes: '',
+        isSelfTracked: isComplete && !hasImplementer,
       });
     }
 
@@ -176,6 +193,8 @@ export function AdminDashboardPage() {
         const isChecked = Boolean(state.checked[p.id]);
         const ack = checklistAcknowledgement(p.id);
         const ver = checklistVerification(p.id);
+        const ackUser = ack?.completedBy?.trim() || '';
+        const isUserRequest = Boolean(ackUser);
 
         list.push({
           id: p.id,
@@ -184,14 +203,15 @@ export function AdminDashboardPage() {
           sectionCategory: 'guide',
           title: p.heading,
           route: `${ROUTES.guideCategory(cat.id)}#${p.id}`,
-          completed: isChecked,
-          completedBy: ack?.completedBy ?? (isChecked ? 'DevOps Contributor' : ''),
+          completed: isUserRequest,
+          completedBy: ackUser,
           completedAt: ack?.completedAt ?? '',
           userNotes: ack?.notes,
           verified: Boolean(ver?.verified),
           verifiedBy: ver?.verifiedBy ?? '',
           verifiedAt: ver?.verifiedAt ?? '',
           verificationNotes: ver?.notes,
+          isSelfTracked: isChecked && !isUserRequest,
         });
       }
     }
@@ -203,6 +223,8 @@ export function AdminDashboardPage() {
         const isChecked = Boolean(state.checked[item.id]);
         const ack = checklistAcknowledgement(item.id);
         const ver = checklistVerification(item.id);
+        const ackUser = ack?.completedBy?.trim() || '';
+        const isUserRequest = Boolean(ackUser);
 
         list.push({
           id: item.id,
@@ -211,14 +233,15 @@ export function AdminDashboardPage() {
           sectionCategory: 'order',
           title: item.text,
           route: `${ROUTES.implementationOrder}#${phase.id}`,
-          completed: isChecked,
-          completedBy: ack?.completedBy ?? (isChecked ? 'DevOps Contributor' : ''),
+          completed: isUserRequest,
+          completedBy: ackUser,
           completedAt: ack?.completedAt ?? '',
           userNotes: ack?.notes,
           verified: Boolean(ver?.verified),
           verifiedBy: ver?.verifiedBy ?? '',
           verifiedAt: ver?.verifiedAt ?? '',
           verificationNotes: ver?.notes,
+          isSelfTracked: isChecked && !isUserRequest,
         });
       }
     }
@@ -229,6 +252,8 @@ export function AdminDashboardPage() {
       const isChecked = Boolean(state.checked[crit.id]);
       const ack = checklistAcknowledgement(crit.id);
       const ver = checklistVerification(crit.id);
+      const ackUser = ack?.completedBy?.trim() || '';
+      const isUserRequest = Boolean(ackUser);
 
       list.push({
         id: crit.id,
@@ -237,14 +262,15 @@ export function AdminDashboardPage() {
         sectionCategory: 'readiness',
         title: crit.text,
         route: ROUTES.productionReadiness,
-        completed: isChecked,
-        completedBy: ack?.completedBy ?? (isChecked ? 'DevOps Contributor' : ''),
+        completed: isUserRequest,
+        completedBy: ackUser,
         completedAt: ack?.completedAt ?? '',
         userNotes: ack?.notes,
         verified: Boolean(ver?.verified),
         verifiedBy: ver?.verifiedBy ?? '',
         verifiedAt: ver?.verifiedAt ?? '',
         verificationNotes: ver?.notes,
+        isSelfTracked: isChecked && !isUserRequest,
       });
     }
 
@@ -255,6 +281,8 @@ export function AdminDashboardPage() {
       const issueVal = openIssueValue(issue.id);
       const ack = checklistAcknowledgement(issue.id);
       const ver = checklistVerification(issue.id);
+      const ackUser = ack?.completedBy?.trim() || '';
+      const isUserRequest = Boolean(ackUser);
 
       list.push({
         id: issue.id,
@@ -263,14 +291,15 @@ export function AdminDashboardPage() {
         sectionCategory: 'notes',
         title: issueVal || issue.text || `Open Issue ${issue.id}`,
         route: `${ROUTES.notes}#open-issues`,
-        completed: isChecked,
-        completedBy: ack?.completedBy ?? (isChecked ? 'DevOps Contributor' : ''),
+        completed: isUserRequest,
+        completedBy: ackUser,
         completedAt: ack?.completedAt ?? '',
         userNotes: ack?.notes,
         verified: Boolean(ver?.verified),
         verifiedBy: ver?.verifiedBy ?? '',
         verifiedAt: ver?.verifiedAt ?? '',
         verificationNotes: ver?.notes,
+        isSelfTracked: isChecked && !isUserRequest,
       });
     }
 
@@ -288,16 +317,89 @@ export function AdminDashboardPage() {
     checklistVerification,
   ]);
 
-  // Unique contributors list
+  // Unique contributors and managed users list
   const uniqueContributors = useMemo(() => {
     const set = new Set<string>();
+    for (const u of managedUsers) {
+      if (u.username.toLowerCase() !== (import.meta.env.VITE_ADMIN_USERNAME || 'admin').toLowerCase()) {
+        set.add(u.username);
+      }
+    }
     for (const item of allItems) {
       if (item.completed && item.completedBy) {
         set.add(item.completedBy.trim());
       }
     }
     return Array.from(set).sort();
-  }, [allItems]);
+  }, [managedUsers, allItems]);
+
+  // User summaries aggregated user-wise for team management
+  const userSummaries = useMemo<UserWorkSummary[]>(() => {
+    const userMap = new Map<string, UserWorkSummary>();
+
+    // 1. Include registered managed users from Cognito
+    for (const u of managedUsers) {
+      if (u.username.toLowerCase() === (import.meta.env.VITE_ADMIN_USERNAME || 'admin').toLowerCase()) {
+        continue;
+      }
+      userMap.set(u.username, {
+        username: u.username,
+        email: u.email,
+        role: u.role,
+        pendingCount: 0,
+        verifiedCount: 0,
+        totalCompleted: 0,
+      });
+    }
+
+    // 2. Aggregate completed items across all users
+    for (const item of allItems) {
+      if (item.completed && item.completedBy) {
+        const user = item.completedBy.trim();
+        if (!userMap.has(user)) {
+          userMap.set(user, {
+            username: user,
+            role: 'Contributor',
+            pendingCount: 0,
+            verifiedCount: 0,
+            totalCompleted: 0,
+          });
+        }
+        const record = userMap.get(user)!;
+        record.totalCompleted += 1;
+        if (item.verified) {
+          record.verifiedCount += 1;
+        } else {
+          record.pendingCount += 1;
+        }
+        if (!record.latestActivity) {
+          record.latestActivity = item.title;
+        }
+      }
+    }
+
+    return Array.from(userMap.values()).sort((a, b) => {
+      if (b.pendingCount !== a.pendingCount) return b.pendingCount - a.pendingCount;
+      if (b.totalCompleted !== a.totalCompleted) return b.totalCompleted - a.totalCompleted;
+      return a.username.localeCompare(b.username);
+    });
+  }, [managedUsers, allItems]);
+
+  const selectedUserSummary = useMemo(() => {
+    if (userFilter === 'all') return null;
+    return (
+      userSummaries.find((u) => u.username === userFilter) || {
+        username: userFilter,
+        pendingCount: allItems.filter(
+          (i) => i.completed && !i.verified && i.completedBy.trim() === userFilter,
+        ).length,
+        verifiedCount: allItems.filter(
+          (i) => i.completed && i.verified && i.completedBy.trim() === userFilter,
+        ).length,
+        totalCompleted: allItems.filter((i) => i.completed && i.completedBy.trim() === userFilter).length,
+      }
+    );
+  }, [userFilter, userSummaries, allItems]);
 
   // Overall metrics
   const totalCount = allItems.length;
@@ -378,6 +480,27 @@ export function AdminDashboardPage() {
     }
     setFeedbackNotice(`Successfully verified ${pendingVisible.length} pending items!`);
     setTimeout(() => setFeedbackNotice(null), 3000);
+  };
+
+  // Verify all pending verification requests for a specific user
+  const handleVerifyAllForUser = (targetUser: string) => {
+    const userPending = allItems.filter(
+      (i) => i.completed && !i.verified && i.completedBy.trim() === targetUser,
+    );
+    if (userPending.length === 0) return;
+
+    for (const item of userPending) {
+      if (item.kind === 'tracker') {
+        const rowKey = item.id.replace(/^tracker-/, '');
+        verifyTrackerRow(rowKey, username || 'Administrator');
+      } else {
+        verifyChecklistItem(item.id, username || 'Administrator');
+      }
+    }
+    setFeedbackNotice(
+      `Verified all ${userPending.length} pending request${userPending.length > 1 ? 's' : ''} for ${targetUser}!`,
+    );
+    setTimeout(() => setFeedbackNotice(null), 3500);
   };
 
   // Admin handles creating a new user in Cognito
@@ -658,6 +781,23 @@ export function AdminDashboardPage() {
         </div>
       </div>
 
+      {/* Normal Self-Learner Tracking Isolated Banner */}
+      <div className="mt-4 flex items-start gap-2.5 rounded border border-sky-300 dark:border-sky-800 bg-sky-50/70 dark:bg-sky-950/30 p-3 text-xs text-sky-900 dark:text-sky-200 shadow-2xs">
+        <svg className="size-4 shrink-0 text-sky-600 dark:text-sky-400 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+          <path
+            fillRule="evenodd"
+            d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM10 9a2 2 0 100-4 2 2 0 000 4zm-4 7a4 4 0 018 0H6z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <div>
+          <strong className="font-semibold">Normal Self-Learner Tracking Isolated:</strong>{' '}
+          <span>
+            Self-learners and guests track checklists privately in their own browsers. Their local activity never enters or clutters your Admin verification queue. Only managed team members requesting verification appear below.
+          </span>
+        </div>
+      </div>
+
       {/* Overview Metric Cards */}
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
         <div className="border border-edge bg-surface p-4">
@@ -707,6 +847,160 @@ export function AdminDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Manage Team User-Wise Hub */}
+      {activeTab !== 'users' && (
+        <div className="mt-6 rounded border border-edge bg-surface p-4 sm:p-5 shadow-2xs">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-edge pb-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="flex size-6 items-center justify-center rounded bg-accent/10 text-accent font-bold text-xs">
+                  👤
+                </span>
+                <h2 className="text-sm font-bold tracking-tight text-ink sm:text-base">
+                  Manage Team User-Wise
+                </h2>
+              </div>
+              <p className="mt-0.5 text-xs text-ink-secondary">
+                See which team member is doing what and review their requests for verification. Click any member to filter activity.
+              </p>
+            </div>
+
+            {userFilter !== 'all' && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-ink-muted">Active member filter:</span>
+                <span className="rounded bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">
+                  {userFilter}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setUserFilter('all')}
+                  className="text-xs text-accent hover:underline font-medium"
+                >
+                  View All Members
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* User selector cards / pills */}
+          <div className="mt-3.5 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setUserFilter('all')}
+              className={[
+                'flex items-center gap-2 rounded border px-3 py-1.5 text-xs font-medium transition-all',
+                userFilter === 'all'
+                  ? 'border-accent bg-accent text-white shadow-xs'
+                  : 'border-edge bg-canvas text-ink hover:bg-sunken',
+              ].join(' ')}
+            >
+              <span>All Members</span>
+              <span
+                className={[
+                  'rounded-full px-1.5 py-0.2 text-[10px] font-bold',
+                  userFilter === 'all' ? 'bg-white/20 text-white' : 'bg-edge/60 text-ink-muted',
+                ].join(' ')}
+              >
+                {completedCount}
+              </span>
+            </button>
+
+            {userSummaries.map((u) => {
+              const isSelected = userFilter === u.username;
+              return (
+                <button
+                  key={u.username}
+                  type="button"
+                  onClick={() => setUserFilter(isSelected ? 'all' : u.username)}
+                  className={[
+                    'flex items-center gap-2 rounded border px-3 py-1.5 text-xs font-medium transition-all',
+                    isSelected
+                      ? 'border-accent bg-accent text-white shadow-xs'
+                      : 'border-edge bg-canvas text-ink hover:bg-sunken',
+                  ].join(' ')}
+                >
+                  <span className="font-semibold">@{u.username}</span>
+                  {u.pendingCount > 0 ? (
+                    <span
+                      className={[
+                        'rounded-full px-1.5 py-0.2 text-[10px] font-bold',
+                        isSelected
+                          ? 'bg-amber-300 text-slate-900'
+                          : 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200',
+                      ].join(' ')}
+                      title={`${u.pendingCount} pending verification request(s)`}
+                    >
+                      {u.pendingCount} pending
+                    </span>
+                  ) : u.verifiedCount > 0 ? (
+                    <span
+                      className={[
+                        'rounded-full px-1.5 py-0.2 text-[10px] font-bold',
+                        isSelected
+                          ? 'bg-emerald-300 text-slate-900'
+                          : 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200',
+                      ].join(' ')}
+                    >
+                      {u.verifiedCount} verified
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-ink-muted">0 items</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Detailed summary for currently selected user */}
+          {selectedUserSummary && (
+            <div className="mt-4 rounded border border-accent/20 bg-accent-subtle/30 p-3.5 text-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <strong className="text-sm font-bold text-ink">
+                      Team Member: {selectedUserSummary.username}
+                    </strong>
+                    <span className="rounded bg-accent/20 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                      {selectedUserSummary.role || 'Contributor'}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-ink-secondary text-xs">
+                    <strong>Doing What: </strong>
+                    {selectedUserSummary.totalCompleted} item{selectedUserSummary.totalCompleted !== 1 ? 's' : ''} completed ·{' '}
+                    <span className="font-semibold text-amber-700 dark:text-amber-300">
+                      {selectedUserSummary.pendingCount} request{selectedUserSummary.pendingCount !== 1 ? 's' : ''} for verified
+                    </span>{' '}
+                    ·{' '}
+                    <span className="font-semibold text-emerald-700 dark:text-emerald-300">
+                      {selectedUserSummary.verifiedCount} verified
+                    </span>
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {selectedUserSummary.pendingCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleVerifyAllForUser(selectedUserSummary.username)}
+                      className="border border-emerald-600 bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 shadow-xs"
+                    >
+                      Verify All for {selectedUserSummary.username} ({selectedUserSummary.pendingCount})
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setUserFilter('all')}
+                    className="border border-edge bg-surface px-2.5 py-1.5 text-xs text-ink hover:bg-sunken"
+                  >
+                    Clear Filter
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filter Tabs */}
       <div className="mt-8 border-b border-edge">
@@ -1173,6 +1467,10 @@ export function AdminDashboardPage() {
                           <span className="inline-flex items-center gap-1 rounded bg-accent-subtle px-2 py-0.5 text-[11px] font-semibold text-accent">
                             ✓ User Completed
                           </span>
+                        ) : item.isSelfTracked ? (
+                          <span className="inline-flex items-center gap-1 rounded border border-edge bg-surface px-2 py-0.5 text-[11px] font-medium text-ink-muted">
+                            Self-Tracked (Normal User)
+                          </span>
                         ) : (
                           <span className="inline-flex items-center rounded bg-edge/40 px-2 py-0.5 text-[11px] text-ink-muted">
                             Not Completed
@@ -1186,32 +1484,41 @@ export function AdminDashboardPage() {
                         </Link>
                       </h3>
 
-                      {/* User acknowledgement / implementation information */}
-                      {item.completed && (
-                        <div className="mt-3 rounded border border-edge/60 bg-sunken/40 p-2.5 text-xs text-ink-secondary">
+                      {/* User Doing What & Request Details */}
+                      {item.completed ? (
+                        <div className="mt-3 rounded border border-edge/60 bg-sunken/40 p-3 text-xs text-ink-secondary space-y-1.5">
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                             <div>
-                              <span className="font-semibold text-ink">Implemented By: </span>
-                              <span className="font-medium text-accent">
-                                {item.completedBy || 'DevOps Contributor'}
+                              <span className="font-semibold text-ink">Team Member: </span>
+                              <span className="font-bold text-accent">
+                                {item.completedBy}
                               </span>
                             </div>
                             {item.completedAt && (
                               <div className="text-[11px] text-ink-muted">
-                                <span>Completed: </span>
+                                <span>Completed At: </span>
                                 <span>{new Date(item.completedAt).toLocaleDateString()}</span>
                               </div>
                             )}
                           </div>
 
+                          <div className="text-xs">
+                            <span className="font-semibold text-ink">Doing What: </span>
+                            <span className="text-ink">Completed implementation for {item.title}</span>
+                          </div>
+
                           {item.userNotes && (
-                            <p className="mt-1.5 text-[11px] text-ink-secondary italic">
-                              <strong className="not-italic text-ink font-medium">Notes: </strong>
+                            <p className="text-[11px] text-ink-secondary italic pt-0.5">
+                              <strong className="not-italic text-ink font-medium">Request Notes / Evidence: </strong>
                               {item.userNotes}
                             </p>
                           )}
                         </div>
-                      )}
+                      ) : item.isSelfTracked ? (
+                        <p className="mt-2 text-[11px] text-ink-muted italic">
+                          Self-tracked locally by guest or self-learner. No verification request sent to administrator.
+                        </p>
+                      ) : null}
                     </div>
 
                     {/* Right side: Verification Status & Actions */}
@@ -1244,9 +1551,11 @@ export function AdminDashboardPage() {
                         </div>
                       ) : item.completed ? (
                         <div className="flex flex-col sm:items-end gap-2">
-                          <span className="inline-flex items-center gap-1 rounded border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 text-xs text-amber-800 dark:text-amber-300">
+                          <span className="inline-flex items-center gap-1.5 rounded border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 text-xs text-amber-800 dark:text-amber-300">
                             <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
-                            Pending Admin Verification
+                            <span className="font-semibold text-amber-900 dark:text-amber-200">Request for Verified</span>
+                            <span className="text-amber-400">•</span>
+                            <span>Pending Admin Verification</span>
                           </span>
 
                           {item.kind === 'checklist' && (

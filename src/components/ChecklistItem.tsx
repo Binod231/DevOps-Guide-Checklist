@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { InlineMarkdown } from './InlineMarkdown';
 import { usePortalState } from '../state/PortalStateProvider';
+import { useAuth } from '../state/authContext';
 import { ChecklistAcknowledgementModal } from './ChecklistAcknowledgementModal';
 
 interface ChecklistItemProps {
@@ -22,11 +23,18 @@ interface ChecklistItemProps {
  */
 export function ChecklistItem({ id, text, trailing, dense = false }: ChecklistItemProps) {
   const { isChecked, toggleChecked, checklistAcknowledgement, checklistVerification } = usePortalState();
+  const { isVerifiedUser, isAdmin, username } = useAuth();
   const checked = isChecked(id);
   const ack = checklistAcknowledgement(id);
   const verification = checklistVerification(id);
   const [ackModalOpen, setAckModalOpen] = useState(false);
   const inputId = `check-${id}`;
+
+  const isManagedUser =
+    Boolean(username) &&
+    username !== 'Self-Learner' &&
+    username !== 'Normal User' &&
+    (isVerifiedUser || isAdmin);
 
   return (
     <div className="flex items-start gap-3">
@@ -34,7 +42,7 @@ export function ChecklistItem({ id, text, trailing, dense = false }: ChecklistIt
         type="checkbox"
         id={inputId}
         checked={checked}
-        onChange={() => toggleChecked(id)}
+        onChange={() => toggleChecked(id, isManagedUser ? username : undefined)}
         // 1rem box inside a 1.5rem touch area keeps the target comfortable
         // without inflating the visual weight.
         className="mt-0.5 size-4 shrink-0 cursor-pointer accent-[var(--portal-accent)]"
@@ -63,22 +71,37 @@ export function ChecklistItem({ id, text, trailing, dense = false }: ChecklistIt
                 </svg>
                 Verified by {verification.verifiedBy}
               </span>
-            ) : (
+            ) : ack?.completedBy ? (
               <span className="inline-flex items-center gap-1 rounded border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 text-[11px] text-amber-800 dark:text-amber-300">
                 <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
-                Pending Verification
+                Pending Verification ({ack.completedBy})
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded border border-edge bg-surface px-1.5 py-0.5 text-[11px] text-ink-muted">
+                Self-Tracked
               </span>
             )}
 
-            <button
-              type="button"
-              onClick={() => setAckModalOpen(true)}
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline hover:text-accent-hover"
-              title="View or edit sign-off details"
-            >
-              Sign-off: {ack?.completedBy || 'DevOps Contributor'}
-              <span aria-hidden="true">✎</span>
-            </button>
+            {ack?.completedBy ? (
+              <button
+                type="button"
+                onClick={() => setAckModalOpen(true)}
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline hover:text-accent-hover"
+                title="View or edit sign-off details"
+              >
+                Sign-off: {ack.completedBy}
+                <span aria-hidden="true">✎</span>
+              </button>
+            ) : isManagedUser ? (
+              <button
+                type="button"
+                onClick={() => setAckModalOpen(true)}
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline hover:text-accent-hover"
+                title="Request administrator verification for this item"
+              >
+                Request Verification &rarr;
+              </button>
+            ) : null}
           </div>
         )}
       </div>
