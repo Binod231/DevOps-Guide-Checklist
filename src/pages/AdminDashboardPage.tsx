@@ -892,7 +892,7 @@ export function AdminDashboardPage() {
               className={[
                 'flex items-center gap-2 rounded border px-3 py-1.5 text-xs font-medium transition-all',
                 userFilter === 'all'
-                  ? 'border-accent bg-accent text-white shadow-xs'
+                  ? 'border-accent bg-accent text-white dark:text-ink-inverse shadow-xs'
                   : 'border-edge bg-canvas text-ink hover:bg-sunken',
               ].join(' ')}
             >
@@ -900,7 +900,7 @@ export function AdminDashboardPage() {
               <span
                 className={[
                   'rounded-full px-1.5 py-0.2 text-[10px] font-bold',
-                  userFilter === 'all' ? 'bg-white/20 text-white' : 'bg-edge/60 text-ink-muted',
+                  userFilter === 'all' ? 'bg-black/20 text-white dark:text-ink-inverse' : 'bg-edge/60 text-ink-muted',
                 ].join(' ')}
               >
                 {completedCount}
@@ -917,7 +917,7 @@ export function AdminDashboardPage() {
                   className={[
                     'flex items-center gap-2 rounded border px-3 py-1.5 text-xs font-medium transition-all',
                     isSelected
-                      ? 'border-accent bg-accent text-white shadow-xs'
+                      ? 'border-accent bg-accent text-white dark:text-ink-inverse shadow-xs'
                       : 'border-edge bg-canvas text-ink hover:bg-sunken',
                   ].join(' ')}
                 >
@@ -1104,7 +1104,7 @@ export function AdminDashboardPage() {
             ].join(' ')}
           >
             <span>Automated Repo Verification</span>
-            <span className="rounded-full bg-emerald-100 px-1.5 py-0.2 text-[10px] text-emerald-800 font-bold dark:bg-emerald-950 dark:text-emerald-300">
+            <span className="rounded-full bg-emerald-500/15 border border-emerald-500/25 px-1.5 py-0.2 text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">
               GitHub CI
             </span>
           </button>

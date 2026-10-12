@@ -31,7 +31,7 @@ describe('Automated Repository Verification & GitHub CI Integration', () => {
     fireEvent.click(tabButton);
 
     expect(
-      screen.getByText(/Automated Repository Verification & GitHub Audit/i),
+      screen.getByText(/Automated Repository Verification/i),
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/GitHub Repository/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /run live repository audit/i })).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe('Automated Repository Verification & GitHub CI Integration', () => {
     const workflowSubTab = screen.getByRole('button', { name: /^ci workflow$/i });
     fireEvent.click(workflowSubTab);
 
-    expect(screen.getByText(/Drop-in GitHub Actions Audit Workflow/i)).toBeInTheDocument();
+    expect(screen.getByText(/GitHub Actions Audit Workflow/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /copy workflow yaml/i })).toBeInTheDocument();
 
     // Switch to Import CI Evidence tab

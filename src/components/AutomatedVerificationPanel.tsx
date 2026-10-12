@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ChangeEvent } from 'react';
+import { useState, useRef, type FormEvent, type ChangeEvent } from 'react';
 import {
   runLiveGitHubAudit,
   parseCIEvidence,
@@ -26,6 +26,7 @@ export function AutomatedVerificationPanel() {
   // Import state
   const [jsonInput, setJsonInput] = useState('');
   const [importNotice, setImportNotice] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Results display state
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -77,7 +78,7 @@ export function AutomatedVerificationPanel() {
       const parsed = JSON.parse(jsonInput);
       const generatedReport = parseCIEvidence(parsed);
       saveAuditReport(generatedReport);
-      setImportNotice(`Loaded evidence report for ${generatedReport.repository}!`);
+      setImportNotice(`Loaded evidence report for ${generatedReport.repository}`);
       setTimeout(() => setImportNotice(null), 4000);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to parse JSON evidence file';
@@ -98,7 +99,7 @@ export function AutomatedVerificationPanel() {
           const parsed = JSON.parse(content);
           const generatedReport = parseCIEvidence(parsed);
           saveAuditReport(generatedReport);
-          setImportNotice(`Loaded evidence from ${file.name} for ${generatedReport.repository}!`);
+          setImportNotice(`Loaded evidence from ${file.name}`);
           setTimeout(() => setImportNotice(null), 4000);
         } catch (err) {
           const msg = err instanceof Error ? err.message : 'Invalid JSON file structure';
@@ -116,7 +117,7 @@ export function AutomatedVerificationPanel() {
       'Automated GitHub Verification',
     );
     setAppliedNotice(
-      `Successfully signed off ${verifiedTrackerCount} tracker rows and ${verifiedChecklistCount} guide practices using automated evidence!`,
+      `Successfully signed off ${verifiedTrackerCount} tracker rows and ${verifiedChecklistCount} guide practices using verified evidence.`,
     );
     setTimeout(() => setAppliedNotice(null), 5000);
   };
@@ -152,27 +153,33 @@ export function AutomatedVerificationPanel() {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Introduction Card */}
-      <div className="border border-edge bg-surface p-5">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-5">
+      {/* Executive Header & Mode Selector */}
+      <div className="rounded-lg border border-edge bg-surface p-5 shadow-2xs">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-base font-semibold text-ink">
-              Automated Repository Verification &amp; GitHub Audit
-            </h2>
-            <p className="mt-1 text-sm text-ink-secondary">
-              Connect your codebase to automatically inspect branch protections, CI pipelines, secret scanners,
-              lockfiles, and IaC definitions against the DevOps Guide standards.
+            <div className="flex items-center gap-2">
+              <span className="flex size-6 items-center justify-center rounded-md bg-accent/15 text-accent text-xs font-semibold">
+                GH
+              </span>
+              <h2 className="text-base font-semibold text-ink">
+                Automated Repository Verification
+              </h2>
+            </div>
+            <p className="mt-1 text-xs text-ink-muted">
+              Inspect branch protections, CI pipelines, secret scanning hooks, and IaC definitions against the DevOps Guide standards.
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-1 border border-edge bg-sunken p-1 text-xs">
+
+          {/* Segmented Navigation */}
+          <div className="flex items-center rounded-md border border-edge bg-sunken p-1 text-xs">
             <button
               type="button"
               onClick={() => setMode('live')}
-              className={`px-3 py-1 font-medium transition-colors ${
+              className={`rounded px-3 py-1.5 font-medium transition-all ${
                 mode === 'live'
-                  ? 'bg-surface font-semibold text-ink shadow-xs'
-                  : 'text-ink-secondary hover:text-ink'
+                  ? 'border border-edge/80 bg-surface font-semibold text-ink shadow-xs'
+                  : 'text-ink-muted hover:text-ink'
               }`}
             >
               Live Scan
@@ -180,10 +187,10 @@ export function AutomatedVerificationPanel() {
             <button
               type="button"
               onClick={() => setMode('import')}
-              className={`px-3 py-1 font-medium transition-colors ${
+              className={`rounded px-3 py-1.5 font-medium transition-all ${
                 mode === 'import'
-                  ? 'bg-surface font-semibold text-ink shadow-xs'
-                  : 'text-ink-secondary hover:text-ink'
+                  ? 'border border-edge/80 bg-surface font-semibold text-ink shadow-xs'
+                  : 'text-ink-muted hover:text-ink'
               }`}
             >
               Import CI Evidence
@@ -191,10 +198,10 @@ export function AutomatedVerificationPanel() {
             <button
               type="button"
               onClick={() => setMode('workflow')}
-              className={`px-3 py-1 font-medium transition-colors ${
+              className={`rounded px-3 py-1.5 font-medium transition-all ${
                 mode === 'workflow'
-                  ? 'bg-surface font-semibold text-ink shadow-xs'
-                  : 'text-ink-secondary hover:text-ink'
+                  ? 'border border-edge/80 bg-surface font-semibold text-ink shadow-xs'
+                  : 'text-ink-muted hover:text-ink'
               }`}
             >
               CI Workflow
@@ -205,10 +212,10 @@ export function AutomatedVerificationPanel() {
 
       {/* Mode 1: Live API Scan Form */}
       {mode === 'live' && (
-        <form onSubmit={handleRunScan} className="border border-edge bg-surface p-5 space-y-4">
+        <form onSubmit={handleRunScan} className="rounded-lg border border-edge bg-surface p-5 shadow-2xs space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="repo-input" className="block text-xs font-semibold uppercase text-ink-muted">
+              <label htmlFor="repo-input" className="block text-xs font-semibold uppercase tracking-wider text-ink-muted">
                 GitHub Repository (owner/repo)
               </label>
               <input
@@ -218,18 +225,18 @@ export function AutomatedVerificationPanel() {
                 value={repoInput}
                 onChange={(e) => setRepoInput(e.target.value)}
                 placeholder="e.g. Binod231/DevOps-Guide-Checklist"
-                className="mt-1.5 w-full border border-edge bg-sunken px-3 py-2 text-sm text-ink focus:border-accent focus:outline-hidden"
+                className="mt-1.5 w-full rounded-md border border-edge bg-sunken px-3 py-2 text-xs text-ink transition-colors focus:border-accent focus:bg-surface focus:outline-hidden"
               />
             </div>
             <div>
               <div className="flex items-center justify-between">
-                <label htmlFor="token-input" className="block text-xs font-semibold uppercase text-ink-muted">
-                  Personal Access Token (Optional for Public / Required for Private)
+                <label htmlFor="token-input" className="block text-xs font-semibold uppercase tracking-wider text-ink-muted">
+                  Personal Access Token (Read-Only)
                 </label>
                 <button
                   type="button"
                   onClick={() => setShowToken(!showToken)}
-                  className="text-xs text-accent hover:underline"
+                  className="text-xs font-medium text-accent hover:underline"
                 >
                   {showToken ? 'Hide' : 'Show'}
                 </button>
@@ -239,28 +246,26 @@ export function AutomatedVerificationPanel() {
                 type={showToken ? 'text' : 'password'}
                 value={tokenInput}
                 onChange={(e) => setTokenInput(e.target.value)}
-                placeholder="github_pat_... (Read-Only Token)"
-                className="mt-1.5 w-full border border-edge bg-sunken px-3 py-2 text-sm text-ink font-mono focus:border-accent focus:outline-hidden"
+                placeholder="github_pat_... (Leave blank for public repositories)"
+                className="mt-1.5 w-full rounded-md border border-edge bg-sunken px-3 py-2 text-xs font-mono text-ink transition-colors focus:border-accent focus:bg-surface focus:outline-hidden"
               />
             </div>
           </div>
 
-          <div className="border border-edge bg-sunken/60 p-3 text-xs text-ink-secondary">
-            <span className="font-semibold text-ink">🔒 Security Note for Private Repositories:</span> Tokens are
-            used strictly in browser memory to query <code className="bg-surface px-1">api.github.com</code> and are
-            never stored or sent to any third-party server. Generate a <strong>Fine-Grained Token</strong> with
-            read-only permissions (<em>Actions: Read-only, Administration: Read-only, Contents: Read-only</em>).
+          <div className="rounded-md border border-edge bg-sunken/40 p-3 text-xs text-ink-muted leading-relaxed">
+            <span className="font-semibold text-ink">Private repository note:</span> Tokens are kept in browser memory
+            only and never persisted. Recommended scopes: <code className="rounded border border-edge bg-surface px-1.5 py-0.5 text-ink">actions:read</code>, <code className="rounded border border-edge bg-surface px-1.5 py-0.5 text-ink">administration:read</code>, <code className="rounded border border-edge bg-surface px-1.5 py-0.5 text-ink">contents:read</code>.
           </div>
 
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center justify-between pt-1">
             <button
               type="submit"
               disabled={isRunning}
-              className="inline-flex items-center gap-2 border border-accent bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-md border border-accent bg-accent px-4 py-2 text-xs font-semibold text-white dark:text-ink-inverse shadow-xs transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isRunning ? (
                 <>
-                  <svg className="size-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <svg className="size-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path
                       className="opacity-75"
@@ -271,12 +276,7 @@ export function AutomatedVerificationPanel() {
                   <span>Querying GitHub API...</span>
                 </>
               ) : (
-                <>
-                  <svg className="size-4" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
-                  </svg>
-                  <span>Run Live Repository Audit</span>
-                </>
+                <span>Run Live Repository Audit</span>
               )}
             </button>
           </div>
@@ -285,83 +285,88 @@ export function AutomatedVerificationPanel() {
 
       {/* Mode 2: Import CI Evidence JSON */}
       {mode === 'import' && (
-        <form onSubmit={handleImportJson} className="border border-edge bg-surface p-5 space-y-4">
-          <p className="text-xs text-ink-secondary">
-            If your private repository runs the automated audit in GitHub Actions CI, you can drop or paste the
-            generated <code className="bg-sunken px-1">devops-audit-evidence.json</code> artifact below.
+        <form onSubmit={handleImportJson} className="rounded-lg border border-edge bg-surface p-5 shadow-2xs space-y-4">
+          <p className="text-xs text-ink-muted">
+            For automated CI in private repositories, import the <code className="rounded border border-edge bg-sunken px-1.5 py-0.5 text-ink">devops-audit-evidence.json</code> artifact produced by GitHub Actions.
           </p>
 
-          <div className="flex flex-col gap-2">
-            <label htmlFor="evidence-file" className="text-xs font-semibold uppercase text-ink-muted">
-              Upload JSON Evidence File
-            </label>
+          <div className="flex flex-wrap items-center gap-3">
             <input
+              ref={fileInputRef}
               id="evidence-file"
               type="file"
               accept=".json,application/json"
               onChange={handleFileUpload}
-              className="border border-edge bg-sunken p-2 text-sm text-ink file:mr-3 file:border-0 file:bg-surface file:px-3 file:py-1 file:text-xs file:font-semibold file:text-ink hover:file:bg-accent hover:file:text-white"
+              className="hidden"
+              aria-label="Upload JSON Evidence File"
             />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="rounded-md border border-edge bg-sunken px-3.5 py-2 text-xs font-medium text-ink transition-colors hover:bg-surface"
+            >
+              Upload Evidence JSON File
+            </button>
+            <span className="text-xs text-ink-muted">or paste the JSON payload below</span>
           </div>
 
           <div>
-            <label htmlFor="evidence-paste" className="block text-xs font-semibold uppercase text-ink-muted">
-              Or Paste Evidence JSON Content
+            <label htmlFor="evidence-paste" className="block text-xs font-semibold uppercase tracking-wider text-ink-muted">
+              Paste Evidence JSON Content
             </label>
             <textarea
               id="evidence-paste"
-              rows={6}
+              rows={5}
               value={jsonInput}
               onChange={(e) => setJsonInput(e.target.value)}
               placeholder='{"repository": "org/repo", "results": [...]}'
-              className="mt-1.5 w-full border border-edge bg-sunken p-3 font-mono text-xs text-ink focus:border-accent focus:outline-hidden"
+              className="mt-1.5 w-full rounded-md border border-edge bg-sunken/60 p-3 font-mono text-xs text-ink transition-colors focus:border-accent focus:bg-surface focus:outline-hidden"
             />
           </div>
 
           <div className="flex items-center justify-between">
             <button
               type="submit"
-              className="border border-accent bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
+              className="rounded-md border border-accent bg-accent px-4 py-2 text-xs font-semibold text-white dark:text-ink-inverse shadow-xs transition-opacity hover:opacity-90"
             >
               Parse &amp; Load Evidence
             </button>
-            {importNotice && <span className="text-xs font-medium text-emerald-600">{importNotice}</span>}
+            {importNotice && <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{importNotice}</span>}
           </div>
         </form>
       )}
 
       {/* Mode 3: CI Workflow Template */}
       {mode === 'workflow' && (
-        <div className="border border-edge bg-surface p-5 space-y-4">
+        <div className="rounded-lg border border-edge bg-surface p-5 shadow-2xs space-y-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-sm font-semibold text-ink">
-                Drop-in GitHub Actions Audit Workflow
+                GitHub Actions Audit Workflow
               </h3>
-              <p className="text-xs text-ink-secondary">
-                Add this file to your private repository as{' '}
-                <code className="bg-sunken px-1 text-ink">.github/workflows/devops-readiness-audit.yml</code>.
+              <p className="text-xs text-ink-muted">
+                Add this file to your repository as <code className="rounded border border-edge bg-sunken px-1.5 py-0.5 text-ink">.github/workflows/devops-readiness-audit.yml</code>.
               </p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={handleCopyWorkflow}
-                className="border border-edge bg-sunken px-3 py-1.5 text-xs font-medium text-ink hover:bg-surface"
+                className="rounded-md border border-edge bg-sunken px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-surface"
               >
-                {copiedWorkflow ? '✓ Copied!' : 'Copy Workflow YAML'}
+                {copiedWorkflow ? 'Copied' : 'Copy Workflow YAML'}
               </button>
               <button
                 type="button"
                 onClick={handleDownloadWorkflow}
-                className="border border-accent bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover"
+                className="rounded-md border border-accent bg-accent px-3 py-1.5 text-xs font-semibold text-white dark:text-ink-inverse shadow-xs transition-opacity hover:opacity-90"
               >
                 Download .yml
               </button>
             </div>
           </div>
 
-          <div className="relative max-h-96 overflow-y-auto border border-edge bg-sunken p-4 font-mono text-xs text-ink">
+          <div className="max-h-80 overflow-y-auto rounded-md border border-edge bg-sunken/80 p-4 font-mono text-xs text-ink leading-relaxed">
             <pre className="whitespace-pre">{workflowYaml}</pre>
           </div>
         </div>
@@ -369,53 +374,57 @@ export function AutomatedVerificationPanel() {
 
       {/* Errors or Notices */}
       {errorMessage && (
-        <div className="border border-rose-300 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
-          <strong>Audit Error:</strong> {errorMessage}
+        <div className="rounded-md border border-rose-300 bg-rose-50 p-4 text-xs font-medium text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
+          <strong>Audit notice:</strong> {errorMessage}
         </div>
       )}
 
       {appliedNotice && (
-        <div className="border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
-          <strong>Verification Applied:</strong> {appliedNotice}
+        <div className="rounded-md border border-emerald-300 bg-emerald-50 p-4 text-xs font-medium text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+          <strong>Applied:</strong> {appliedNotice}
         </div>
       )}
 
       {/* Audit Report Presentation */}
       {report && (
-        <div className="border border-edge bg-surface space-y-5 p-5">
+        <div className="rounded-lg border border-edge bg-surface p-5 shadow-2xs space-y-5">
           {/* Executive Summary Banner */}
-          <div className="flex flex-col gap-4 border-b border-edge pb-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs uppercase tracking-wider text-ink-muted">
-                  Audited Target:
-                </span>
-                <span className="font-mono text-sm font-semibold text-ink">
+          <div className="flex flex-col gap-4 border-b border-edge pb-5 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Target:</span>
+                <span className="font-mono text-sm font-bold text-ink">
                   {report.repository}
                 </span>
-                <span className="border border-edge bg-sunken px-2 py-0.5 text-xs text-ink-secondary">
+                <span className="rounded border border-edge bg-sunken px-2 py-0.5 text-[11px] font-medium text-ink-muted">
                   {report.scannerMode === 'live_api' ? 'Live GitHub API' : 'CI Evidence Artifact'}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-ink-muted">
+              <p className="text-xs text-ink-muted">
                 Audit executed: {new Date(report.scannedAt).toLocaleString()}
               </p>
             </div>
 
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <div className="text-2xl font-bold tabular-nums text-ink">
-                  {report.scorePercentage}%
+                <div className="flex items-baseline justify-end gap-1.5">
+                  <span className="text-2xl font-bold tabular-nums text-ink">
+                    {report.scorePercentage}%
+                  </span>
+                  <span className="text-xs font-medium text-ink-muted">
+                    Compliance
+                  </span>
                 </div>
-                <div className="text-xs font-medium text-ink-muted">
-                  Readiness Compliance
-                </div>
+                <p className="text-[11px] text-ink-muted">
+                  {report.passedCount} of {report.totalEvaluated} controls satisfied
+                </p>
               </div>
+
               {isAdmin && (
                 <button
                   type="button"
                   onClick={handleApplyVerifications}
-                  className="border border-emerald-600 bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-emerald-700"
+                  className="rounded-md border border-emerald-600 bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white dark:bg-emerald-500 dark:text-slate-950 shadow-xs transition-opacity hover:opacity-90"
                 >
                   Apply Passing Controls to Portal
                 </button>
@@ -423,122 +432,122 @@ export function AutomatedVerificationPanel() {
             </div>
           </div>
 
-          {/* Stats Badges & Filter Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+          {/* Clean High-Contrast Filter Pills (Fixed for Light & Dark Mode) */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setStatusFilter('all')}
+              className={`rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
+                statusFilter === 'all'
+                  ? 'border-accent bg-accent-subtle text-accent font-semibold'
+                  : 'border-edge bg-surface text-ink-secondary hover:bg-sunken hover:text-ink'
+              }`}
+            >
+              All Controls ({report.totalEvaluated})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('pass')}
+              className={`rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
+                statusFilter === 'pass'
+                  ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold'
+                  : 'border-edge bg-surface text-ink-secondary hover:bg-sunken hover:text-ink'
+              }`}
+            >
+              Passed ({report.passedCount})
+            </button>
+            {report.failedCount > 0 && (
               <button
                 type="button"
-                onClick={() => setStatusFilter('all')}
-                className={`border px-2.5 py-1 text-xs font-medium ${
-                  statusFilter === 'all'
-                    ? 'border-ink bg-ink text-white dark:bg-white dark:text-ink'
-                    : 'border-edge bg-sunken text-ink hover:bg-surface'
+                onClick={() => setStatusFilter('fail')}
+                className={`rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
+                  statusFilter === 'fail'
+                    ? 'border-rose-500/50 bg-rose-500/15 text-rose-700 dark:text-rose-300 font-semibold'
+                    : 'border-edge bg-surface text-ink-secondary hover:bg-sunken hover:text-ink'
                 }`}
               >
-                All Controls ({report.totalEvaluated})
+                Failed ({report.failedCount})
               </button>
+            )}
+            {report.warnCount > 0 && (
               <button
                 type="button"
-                onClick={() => setStatusFilter('pass')}
-                className={`border px-2.5 py-1 text-xs font-medium ${
-                  statusFilter === 'pass'
-                    ? 'border-emerald-600 bg-emerald-600 text-white'
-                    : 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+                onClick={() => setStatusFilter('warn')}
+                className={`rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
+                  statusFilter === 'warn'
+                    ? 'border-amber-500/50 bg-amber-500/15 text-amber-800 dark:text-amber-300 font-semibold'
+                    : 'border-edge bg-surface text-ink-secondary hover:bg-sunken hover:text-ink'
                 }`}
               >
-                Passed ({report.passedCount})
+                Warnings ({report.warnCount})
               </button>
-              {report.failedCount > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setStatusFilter('fail')}
-                  className={`border px-2.5 py-1 text-xs font-medium ${
-                    statusFilter === 'fail'
-                      ? 'border-rose-600 bg-rose-600 text-white'
-                      : 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300'
-                  }`}
-                >
-                  Failed ({report.failedCount})
-                </button>
-              )}
-              {report.warnCount > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setStatusFilter('warn')}
-                  className={`border px-2.5 py-1 text-xs font-medium ${
-                    statusFilter === 'warn'
-                      ? 'border-amber-600 bg-amber-600 text-white'
-                      : 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
-                  }`}
-                >
-                  Warnings ({report.warnCount})
-                </button>
-              )}
-            </div>
+            )}
           </div>
 
-          {/* Itemized Results */}
-          <div className="divide-y divide-edge border border-edge">
+          {/* Itemized Results Cards */}
+          <div className="divide-y divide-edge rounded-md border border-edge bg-surface">
             {filteredResults.map((item) => (
-              <div key={item.id} className="p-4 transition-colors hover:bg-sunken/40">
+              <div key={item.id} className="p-4 transition-colors hover:bg-sunken/30">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-semibold text-ink-muted">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded bg-sunken border border-edge px-1.5 py-0.5 font-mono text-[11px] font-semibold text-ink-secondary">
                       {item.id}
                     </span>
-                    <span className="text-xs font-medium uppercase tracking-wider text-ink-muted">
-                      [{item.category}]
+                    <span className="text-xs text-ink-muted">
+                      {item.category}
                     </span>
-                    <h4 className="text-sm font-semibold text-ink">
+                    <span className="text-ink-muted" aria-hidden="true">·</span>
+                    <h4 className="text-xs font-semibold text-ink sm:text-sm">
                       {item.title}
                     </h4>
                   </div>
-                  <div>
+
+                  <div className="shrink-0">
                     {item.status === 'pass' && (
-                      <span className="inline-flex items-center gap-1 border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
-                        ✓ PASSED
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                        <span className="size-1.5 rounded-full bg-emerald-500"></span>
+                        Verified
                       </span>
                     )}
                     {item.status === 'fail' && (
-                      <span className="inline-flex items-center gap-1 border border-rose-300 bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
-                        ✕ FAILED
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-0.5 text-xs font-medium text-rose-700 dark:text-rose-400">
+                        <span className="size-1.5 rounded-full bg-rose-500"></span>
+                        Non-Compliant
                       </span>
                     )}
                     {item.status === 'warn' && (
-                      <span className="inline-flex items-center gap-1 border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
-                        ⚠ WARNING
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+                        <span className="size-1.5 rounded-full bg-amber-500"></span>
+                        Advisory
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="mt-2 space-y-1 text-xs">
-                  <p className="font-medium text-ink">{item.summary}</p>
-                  <p className="text-ink-secondary">
-                    <strong className="text-ink-muted">Evidence:</strong> {item.evidence}
-                  </p>
-                  <p className="text-ink-muted italic">
-                    <strong>DevOps Gate:</strong> {item.verificationGate}
-                  </p>
-                  {item.details && item.details.length > 0 && (
-                    <ul className="mt-1 list-disc pl-5 text-ink-secondary space-y-0.5">
-                      {item.details.map((detail, idx) => (
-                        <li key={idx}>{detail}</li>
-                      ))}
-                    </ul>
-                  )}
-                  {item.url && (
-                    <div className="pt-1">
+                <div className="mt-2.5 space-y-2 text-xs">
+                  <p className="font-medium text-ink leading-relaxed">{item.summary}</p>
+                  
+                  <div className="rounded border-l-2 border-accent/60 bg-sunken/50 px-3 py-2 text-ink-secondary">
+                    <span className="font-semibold text-ink-muted">Evidence: </span>
+                    <span>{item.evidence}</span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-ink-muted">
+                    <p className="text-[11px]">
+                      <span className="font-medium">DevOps Gate:</span> {item.verificationGate}
+                    </p>
+                    {item.url && (
                       <a
                         href={item.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-accent hover:underline"
+                        className="text-[11px] font-medium text-accent hover:underline inline-flex items-center gap-1"
                       >
-                        Inspect on GitHub &rarr;
+                        <span>View in GitHub</span>
+                        <span aria-hidden="true">&rarr;</span>
                       </a>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
