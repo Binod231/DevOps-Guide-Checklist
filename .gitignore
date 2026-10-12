@@ -20,3 +20,7 @@ CORRECTIONS.md
 source-originals/
 DevOps Implementation Guide*.md
 DevOps Operational Checklist*.md
+
+# Audit artifacts
+devops-audit-evidence.json
+.devops-audit/

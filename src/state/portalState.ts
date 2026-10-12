@@ -13,6 +13,7 @@
  */
 
 import type { TrackerRow, ChecklistItem, Practice } from '../content/types';
+import type { AutomatedAuditReport } from '../services/githubAudit';
 
 export const STATE_STORAGE_KEY = 'portal.state.v1';
 export const STATE_VERSION = 1;
@@ -76,6 +77,8 @@ export interface PortalState {
   checklistVerifications?: Record<string, ChecklistVerification>;
   /** User acknowledgements for completed checklist items. Keyed by item id. */
   checklistAcknowledgements?: Record<string, ChecklistAcknowledgement>;
+  /** Latest automated GitHub / CI audit report. */
+  latestAuditReport?: AutomatedAuditReport;
 }
 
 export interface ChecklistVerification {
@@ -327,6 +330,12 @@ function sanitiseChecklistAcknowledgements(value: unknown): Record<string, Check
   return out;
 }
 
+function sanitiseAuditReport(value: unknown): AutomatedAuditReport | undefined {
+  if (!isRecord(value)) return undefined;
+  if (typeof value.repository !== 'string' || !Array.isArray(value.results)) return undefined;
+  return value as unknown as AutomatedAuditReport;
+}
+
 /**
  * Coerces unknown data into a well-formed {@link PortalState}.
  *
@@ -382,6 +391,9 @@ export function sanitiseState(value: unknown): PortalState {
   }
   if (value.checklistAcknowledgements !== undefined) {
     state.checklistAcknowledgements = sanitiseChecklistAcknowledgements(value.checklistAcknowledgements);
+  }
+  if (value.latestAuditReport !== undefined) {
+    state.latestAuditReport = sanitiseAuditReport(value.latestAuditReport);
   }
 
   return state;
@@ -532,6 +544,8 @@ export function mergeStates(local: PortalState, incoming: PortalState): PortalSt
     ...(incoming.checklistVerifications ?? {}),
     ...(local.checklistVerifications ?? {}),
   };
+
+  merged.latestAuditReport = local.latestAuditReport ?? incoming.latestAuditReport;
 
   return merged;
 }

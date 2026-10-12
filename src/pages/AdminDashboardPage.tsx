@@ -5,8 +5,9 @@ import { usePortalState } from '../state/PortalStateProvider';
 import { guide, checklist, tracker, ROUTES } from '../content/registry';
 import { DEFAULT_COGNITO_CONFIG } from '../state/cognitoAuth';
 import { serialiseState } from '../state/transfer';
+import { AutomatedVerificationPanel } from '../components/AutomatedVerificationPanel';
 
-type FilterTab = 'pending' | 'verified' | 'completed' | 'all' | 'users';
+type FilterTab = 'pending' | 'verified' | 'completed' | 'all' | 'users' | 'automated';
 type SectionFilter = 'all' | 'tracker' | 'guide' | 'order' | 'readiness' | 'notes';
 
 interface UnifiedDashboardItem {
@@ -1091,6 +1092,22 @@ export function AdminDashboardPage() {
               {managedUsers.length}
             </span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('automated')}
+            className={[
+              'flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold transition-colors',
+              activeTab === 'automated'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-ink-secondary hover:text-ink',
+            ].join(' ')}
+          >
+            <span>Automated Repo Verification</span>
+            <span className="rounded-full bg-emerald-100 px-1.5 py-0.2 text-[10px] text-emerald-800 font-bold dark:bg-emerald-950 dark:text-emerald-300">
+              GitHub CI
+            </span>
+          </button>
         </div>
       </div>
 
@@ -1362,8 +1379,15 @@ export function AdminDashboardPage() {
         </div>
       )}
 
+      {/* Tab: Automated Repository Verification */}
+      {activeTab === 'automated' && (
+        <div className="mt-6">
+          <AutomatedVerificationPanel />
+        </div>
+      )}
+
       {/* Control Bar: Filters & Search (Only on item listing tabs) */}
-      {activeTab !== 'users' && (
+      {activeTab !== 'users' && activeTab !== 'automated' && (
         <>
           <div className="mt-4 flex flex-col gap-3 rounded border border-edge bg-sunken/40 p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">

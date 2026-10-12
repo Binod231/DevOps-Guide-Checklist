@@ -1,7 +1,7 @@
 # DevOps Implementation & Readiness Portal
 
 [![Live Portal](https://img.shields.io/badge/AWS%20S3-Live%20Portal-orange?style=for-the-badge&logo=amazons3)](http://devops-guide-portal-848175179383.s3-website-us-east-1.amazonaws.com)
-[![Tests](https://img.shields.io/badge/Tests-887%20Passed-brightgreen?style=for-the-badge&logo=vitest)](http://devops-guide-portal-848175179383.s3-website-us-east-1.amazonaws.com)
+[![Tests](https://img.shields.io/badge/Tests-899%20Passed-brightgreen?style=for-the-badge&logo=vitest)](http://devops-guide-portal-848175179383.s3-website-us-east-1.amazonaws.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue?style=for-the-badge&logo=typescript)](http://devops-guide-portal-848175179383.s3-website-us-east-1.amazonaws.com)
 [![Cognito](https://img.shields.io/badge/AWS%20Cognito-Auth%20%26%20RBAC-red?style=for-the-badge&logo=amazoncognito)](http://devops-guide-portal-848175179383.s3-website-us-east-1.amazonaws.com)
 
@@ -34,7 +34,13 @@
 - **Auto-Hydration on Page Load:** Every user and visitor automatically synchronizes with the central cloud store when opening the portal.
 - **1-Click Publish & Sync:** Administrators can publish state updates directly to the S3 bucket from the UI or via CLI (`npm run sync-cloud`).
 
-### 3. Comprehensive Portal Navigation
+### 3. Automated Repository Verification & GitHub CI Audit Engine
+- **Empirical Control Checking:** Replaces subjective self-reporting with automated inspection of branch protections, active CI workflows, secret scanning hooks, test suites, lockfiles, and IaC definitions.
+- **Private Repository Security:** Supports inside-out GitHub Actions CI self-audits (zero token exposure in the browser) as well as live in-browser audits using fine-grained read-only tokens.
+- **1-Click Apply to Portal:** Administrators can view the compliance readiness score and automatically sign off passing controls in the Tracker and Guide with verified audit evidence.
+- **Drop-in CI Workflow:** Includes `.github/workflows/devops-readiness-audit.yml` and CLI scanner (`npm run audit`) for automated CI pipeline execution.
+
+### 4. Comprehensive Portal Navigation
 
 | Route | View | Description |
 |---|---|---|
@@ -44,9 +50,9 @@
 | `/checklist/production-readiness` | **Readiness Gate** | 16-point production readiness criteria gate |
 | `/notes` | **Notes & Decisions** | Shared notes, open issues, and useful reference links |
 | `/tracker` | **Implementation Tracker** | Full 24-row, 11-column table with multi-criteria filtering and sorting |
-| `/admin` | **Admin Dashboard** | Sign-off verification panel, metrics, and Cognito user management |
+| `/admin` | **Admin Dashboard** | Sign-off verification panel, metrics, Cognito user management, and Automated Repo Verification |
 
-### 4. Enterprise Tools & Usability
+### 5. Enterprise Tools & Usability
 - **Global Instant Search (`Ctrl` / `Cmd` + `K`):** Full-text fuzzy search across all practices, checklist items, and tracker rows.
 - **State Export & Import:** Export state as versioned JSON or download tracker as spreadsheet-ready CSV.
 - **Theme Support:** High-contrast light and dark modes with persistent user preference.
@@ -88,8 +94,9 @@ Visit [http://localhost:5173](http://localhost:5173) in your browser.
 |---|---|
 | `npm run dev` | Starts Vite development server at `localhost:5173` |
 | `npm run build` | Validates TypeScript and generates production bundle in `dist/` |
-| `npm run test` | Runs the full Vitest test suite (887 tests, 31 test files) |
+| `npm run test` | Runs the full Vitest test suite (899 tests, 33 test files) |
 | `npm run typecheck` | Strict TypeScript type checking without emitting files |
+| `npm run audit` | Runs local DevOps readiness audit and outputs `devops-audit-evidence.json` |
 | `npm run sync-cloud` | Pushes central state `/data/portal-state.json` to AWS S3 |
 | `npm run deploy` | Builds the production bundle and deploys to AWS S3 website bucket |
 

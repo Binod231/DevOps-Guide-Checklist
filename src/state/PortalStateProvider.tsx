@@ -21,6 +21,7 @@ import {
   type ChecklistVerification,
   type ChecklistAcknowledgement,
 } from './portalState';
+import type { AutomatedAuditReport } from '../services/githubAudit';
 import { checkboxIds, categoryById, type ChecklistUniverse } from '../content/registry';
 import type { TrackerRow, ChecklistItem, Practice, GuideCategory, Phase } from '../content/types';
 
@@ -88,6 +89,14 @@ interface PortalStateContextValue {
   syncFromCloudStore: () => Promise<{ success: boolean; message?: string }>;
   isCloudSyncing: boolean;
   cloudSyncNotice: string | null;
+
+  /** Automated GitHub Verification Audit */
+  latestAuditReport: AutomatedAuditReport | null;
+  saveAuditReport: (report: AutomatedAuditReport) => void;
+  applyAuditVerifications: (
+    report: AutomatedAuditReport,
+    verifiedBy?: string,
+  ) => { verifiedTrackerCount: number; verifiedChecklistCount: number };
 }
 
 const PortalStateContext = createContext<PortalStateContextValue | null>(null);
@@ -682,9 +691,73 @@ export function PortalStateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const saveAuditReport = useCallback((report: AutomatedAuditReport) => {
+    setState((current) => ({
+      ...current,
+      latestAuditReport: report,
+    }));
+  }, []);
+
+  const applyAuditVerifications = useCallback(
+    (report: AutomatedAuditReport, verifiedBy = 'Automated GitHub Audit') => {
+      let verifiedTrackerCount = 0;
+      let verifiedChecklistCount = 0;
+      const now = new Date().toISOString();
+
+      setState((current) => {
+        const nextTracker = { ...current.tracker };
+        const nextVerifications = { ...(current.checklistVerifications ?? {}) };
+        const nextChecked = { ...current.checked };
+
+        for (const res of report.results) {
+          if (res.status !== 'pass') continue;
+
+          // 1. Update tracker row if rowKey is set
+          if (res.rowKey) {
+            const existingRow = nextTracker[res.rowKey] ?? {};
+            nextTracker[res.rowKey] = {
+              ...existingRow,
+              status: 'Completed',
+              verified: 'Yes',
+              verifiedBy,
+              evidence: res.evidence,
+            };
+            verifiedTrackerCount++;
+          }
+
+          // 2. Update guide practice checklist item if practiceId is set
+          if (res.practiceId) {
+            nextVerifications[res.practiceId] = {
+              verified: true,
+              verifiedBy,
+              verifiedAt: now,
+              notes: res.evidence,
+            };
+            nextChecked[res.practiceId] = true;
+            verifiedChecklistCount++;
+          }
+        }
+
+        return {
+          ...current,
+          tracker: nextTracker,
+          checklistVerifications: nextVerifications,
+          checked: nextChecked,
+          latestAuditReport: report,
+        };
+      });
+
+      return { verifiedTrackerCount, verifiedChecklistCount };
+    },
+    [],
+  );
+
   const value = useMemo<PortalStateContextValue>(
     () => ({
       state,
+      latestAuditReport: state.latestAuditReport ?? null,
+      saveAuditReport,
+      applyAuditVerifications,
       isChecked: (id) => Boolean(state.checked[id]),
       setChecked,
       toggleChecked,
@@ -779,6 +852,8 @@ export function PortalStateProvider({ children }: { children: ReactNode }) {
       syncFromCloudStore,
       isCloudSyncing,
       cloudSyncNotice,
+      saveAuditReport,
+      applyAuditVerifications,
     ],
   );
 

@@ -1,0 +1,39 @@
+name: DevOps Readiness Verification Audit
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  checks: read
+  pull-requests: read
+  security-events: read
+
+jobs:
+  devops-audit:
+    name: Evaluate DevOps Readiness Controls
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run DevOps Portal Audit Scanner
+        run: node scripts/run-devops-audit.mjs
+
+      - name: Archive Verification Evidence Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: devops-audit-evidence
+          path: devops-audit-evidence.json
+          retention-days: 30

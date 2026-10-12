@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "typecheck": "npm run generate-content && tsc -b --noEmit",
     "sync-cloud": "node scripts/sync-cloud.mjs",
+    "audit": "node scripts/run-devops-audit.mjs",
     "deploy": "npm run build && aws s3 sync dist/ s3://devops-guide-portal-848175179383 --delete"
   },
   "dependencies": {
