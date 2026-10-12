@@ -783,8 +783,8 @@ export function AdminDashboardPage() {
       </div>
 
       {/* Normal Self-Learner Tracking Isolated Banner */}
-      <div className="mt-4 flex items-start gap-2.5 rounded border border-sky-300 dark:border-sky-800 bg-sky-50/70 dark:bg-sky-950/30 p-3 text-xs text-sky-900 dark:text-sky-200 shadow-2xs">
-        <svg className="size-4 shrink-0 text-sky-600 dark:text-sky-400 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+      <div className="mt-3 flex items-start gap-2.5 rounded-md border border-edge bg-surface/60 p-3 text-xs text-ink-secondary">
+        <svg className="size-4 shrink-0 text-ink-muted mt-0.5" viewBox="0 0 20 20" fill="currentColor">
           <path
             fillRule="evenodd"
             d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM10 9a2 2 0 100-4 2 2 0 000 4zm-4 7a4 4 0 018 0H6z"
@@ -792,8 +792,8 @@ export function AdminDashboardPage() {
           />
         </svg>
         <div>
-          <strong className="font-semibold">Normal Self-Learner Tracking Isolated:</strong>{' '}
-          <span>
+          <strong className="font-semibold text-ink">Normal Self-Learner Tracking Isolated:</strong>{' '}
+          <span className="text-ink-muted">
             Self-learners and guests track checklists privately in their own browsers. Their local activity never enters or clutters your Admin verification queue. Only managed team members requesting verification appear below.
           </span>
         </div>
@@ -801,48 +801,58 @@ export function AdminDashboardPage() {
 
       {/* Overview Metric Cards */}
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <div className="border border-edge bg-surface p-4">
-          <p className="text-xs font-medium text-ink-muted uppercase">Total Items</p>
+        <div className="rounded-md border border-edge bg-surface p-4">
+          <p className="text-xs font-medium text-ink-muted uppercase tracking-wider">Total Items</p>
           <p className="mt-1 text-2xl font-bold text-ink">{totalCount}</p>
           <p className="mt-0.5 text-[11px] text-ink-muted">Across all portal sections</p>
         </div>
 
-        <div className="border border-edge bg-surface p-4">
-          <p className="text-xs font-medium text-ink-muted uppercase">User Completed</p>
-          <p className="mt-1 text-2xl font-bold text-accent">{completedCount}</p>
+        <div className="rounded-md border border-edge bg-surface p-4">
+          <p className="text-xs font-medium text-ink-muted uppercase tracking-wider">User Completed</p>
+          <p className="mt-1 text-2xl font-bold text-ink">{completedCount}</p>
           <p className="mt-0.5 text-[11px] text-ink-muted">Marked by contributors</p>
         </div>
 
-        <div className="border border-amber-300 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 p-4">
-          <p className="text-xs font-medium text-amber-700 dark:text-amber-400 uppercase">
-            Pending Verification
-          </p>
-          <p className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-300">
+        <div className="rounded-md border border-edge bg-surface p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-ink-muted uppercase tracking-wider">
+              Pending Verification
+            </p>
+            {pendingCount > 0 && (
+              <span className="size-2 rounded-full bg-amber-500" title={`${pendingCount} pending review`} />
+            )}
+          </div>
+          <p className="mt-1 text-2xl font-bold text-ink">
             {pendingCount}
           </p>
-          <p className="mt-0.5 text-[11px] text-amber-700 dark:text-amber-400">
+          <p className="mt-0.5 text-[11px] text-ink-muted">
             Awaiting Admin Review
           </p>
         </div>
 
-        <div className="border border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 p-4">
-          <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase">
-            Verified by Admin
-          </p>
-          <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-300">
+        <div className="rounded-md border border-edge bg-surface p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-ink-muted uppercase tracking-wider">
+              Verified by Admin
+            </p>
+            {verifiedCount > 0 && (
+              <span className="size-2 rounded-full bg-accent" title={`${verifiedCount} verified`} />
+            )}
+          </div>
+          <p className="mt-1 text-2xl font-bold text-ink">
             {verifiedCount}
           </p>
-          <p className="mt-0.5 text-[11px] text-emerald-700 dark:text-emerald-400">
+          <p className="mt-0.5 text-[11px] text-ink-muted">
             Approved &amp; signed off
           </p>
         </div>
 
-        <div className="border border-edge bg-surface p-4 col-span-2 sm:col-span-1">
-          <p className="text-xs font-medium text-ink-muted uppercase">Verification Rate</p>
+        <div className="rounded-md border border-edge bg-surface p-4 col-span-2 sm:col-span-1">
+          <p className="text-xs font-medium text-ink-muted uppercase tracking-wider">Verification Rate</p>
           <p className="mt-1 text-2xl font-bold text-ink">{verificationRate}%</p>
-          <div className="mt-1 h-1.5 w-full bg-edge/40 rounded-full overflow-hidden">
+          <div className="mt-2 h-1.5 w-full bg-sunken rounded-full overflow-hidden border border-edge/60">
             <div
-              className="h-full bg-emerald-600 transition-all duration-300"
+              className="h-full bg-accent transition-all duration-300"
               style={{ width: `${verificationRate}%` }}
             />
           </div>
@@ -851,27 +861,27 @@ export function AdminDashboardPage() {
 
       {/* Manage Team User-Wise Hub */}
       {activeTab !== 'users' && (
-        <div className="mt-6 rounded border border-edge bg-surface p-4 sm:p-5 shadow-2xs">
+        <div className="mt-5 rounded-md border border-edge bg-surface p-4 sm:p-5 shadow-2xs">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-edge pb-3">
             <div>
               <div className="flex items-center gap-2">
-                <span className="flex size-6 items-center justify-center rounded bg-accent/10 text-accent font-bold text-xs">
-                  👤
-                </span>
-                <h2 className="text-sm font-bold tracking-tight text-ink sm:text-base">
+                <svg className="size-4 text-ink-muted shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                </svg>
+                <h2 className="text-sm font-semibold tracking-tight text-ink sm:text-base">
                   Manage Team User-Wise
                 </h2>
               </div>
-              <p className="mt-0.5 text-xs text-ink-secondary">
-                See which team member is doing what and review their requests for verification. Click any member to filter activity.
+              <p className="mt-0.5 text-xs text-ink-muted">
+                Filter activity and review verification requests by contributor.
               </p>
             </div>
 
             {userFilter !== 'all' && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-ink-muted">Active member filter:</span>
-                <span className="rounded bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">
-                  {userFilter}
+                <span className="text-xs text-ink-muted">Filtered by:</span>
+                <span className="rounded bg-accent-subtle px-2 py-0.5 text-xs font-semibold text-accent border border-accent/20">
+                  @{userFilter}
                 </span>
                 <button
                   type="button"
@@ -885,22 +895,22 @@ export function AdminDashboardPage() {
           </div>
 
           {/* User selector cards / pills */}
-          <div className="mt-3.5 flex flex-wrap items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setUserFilter('all')}
               className={[
-                'flex items-center gap-2 rounded border px-3 py-1.5 text-xs font-medium transition-all',
+                'flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium transition-all',
                 userFilter === 'all'
-                  ? 'border-accent bg-accent text-white dark:text-ink-inverse shadow-xs'
-                  : 'border-edge bg-canvas text-ink hover:bg-sunken',
+                  ? 'border-accent bg-accent-subtle text-accent font-semibold shadow-xs'
+                  : 'border-edge bg-sunken/40 text-ink-secondary hover:bg-sunken hover:text-ink',
               ].join(' ')}
             >
               <span>All Members</span>
               <span
                 className={[
                   'rounded-full px-1.5 py-0.2 text-[10px] font-bold',
-                  userFilter === 'all' ? 'bg-black/20 text-white dark:text-ink-inverse' : 'bg-edge/60 text-ink-muted',
+                  userFilter === 'all' ? 'bg-accent/20 text-accent' : 'bg-edge/60 text-ink-muted',
                 ].join(' ')}
               >
                 {completedCount}
@@ -915,33 +925,23 @@ export function AdminDashboardPage() {
                   type="button"
                   onClick={() => setUserFilter(isSelected ? 'all' : u.username)}
                   className={[
-                    'flex items-center gap-2 rounded border px-3 py-1.5 text-xs font-medium transition-all',
+                    'flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium transition-all',
                     isSelected
-                      ? 'border-accent bg-accent text-white dark:text-ink-inverse shadow-xs'
-                      : 'border-edge bg-canvas text-ink hover:bg-sunken',
+                      ? 'border-accent bg-accent-subtle text-accent font-semibold shadow-xs'
+                      : 'border-edge bg-sunken/40 text-ink-secondary hover:bg-sunken hover:text-ink',
                   ].join(' ')}
                 >
-                  <span className="font-semibold">@{u.username}</span>
+                  <span className="font-medium">@{u.username}</span>
                   {u.pendingCount > 0 ? (
                     <span
-                      className={[
-                        'rounded-full px-1.5 py-0.2 text-[10px] font-bold',
-                        isSelected
-                          ? 'bg-amber-300 text-slate-900'
-                          : 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200',
-                      ].join(' ')}
+                      className="rounded-full px-1.5 py-0.2 text-[10px] font-medium bg-amber-500/15 border border-amber-500/25 text-amber-700 dark:text-amber-400"
                       title={`${u.pendingCount} pending verification request(s)`}
                     >
                       {u.pendingCount} pending
                     </span>
                   ) : u.verifiedCount > 0 ? (
                     <span
-                      className={[
-                        'rounded-full px-1.5 py-0.2 text-[10px] font-bold',
-                        isSelected
-                          ? 'bg-emerald-300 text-slate-900'
-                          : 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200',
-                      ].join(' ')}
+                      className="rounded-full px-1.5 py-0.2 text-[10px] font-medium bg-accent-subtle border border-accent/20 text-accent"
                     >
                       {u.verifiedCount} verified
                     </span>
@@ -1010,19 +1010,19 @@ export function AdminDashboardPage() {
             type="button"
             onClick={() => setActiveTab('pending')}
             className={[
-              'flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold transition-colors',
+              'flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-medium transition-colors',
               activeTab === 'pending'
-                ? 'border-accent text-accent'
+                ? 'border-accent text-accent font-semibold'
                 : 'border-transparent text-ink-secondary hover:text-ink',
             ].join(' ')}
           >
             <span>Pending Verification</span>
             <span
               className={[
-                'rounded-full px-1.5 py-0.2 text-[10px]',
-                pendingCount > 0
-                  ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 font-bold'
-                  : 'bg-edge/40 text-ink-muted',
+                'rounded-full px-1.5 py-0.2 text-[10px] font-medium border',
+                activeTab === 'pending'
+                  ? 'bg-accent-subtle border-accent/30 text-accent'
+                  : 'bg-sunken border-edge/60 text-ink-muted',
               ].join(' ')}
             >
               {pendingCount}
@@ -1033,14 +1033,21 @@ export function AdminDashboardPage() {
             type="button"
             onClick={() => setActiveTab('verified')}
             className={[
-              'flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold transition-colors',
+              'flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-medium transition-colors',
               activeTab === 'verified'
-                ? 'border-accent text-accent'
+                ? 'border-accent text-accent font-semibold'
                 : 'border-transparent text-ink-secondary hover:text-ink',
             ].join(' ')}
           >
             <span>Verified</span>
-            <span className="rounded-full bg-emerald-100 dark:bg-emerald-900/50 px-1.5 py-0.2 text-[10px] text-emerald-700 dark:text-emerald-300 font-bold">
+            <span
+              className={[
+                'rounded-full px-1.5 py-0.2 text-[10px] font-medium border',
+                activeTab === 'verified'
+                  ? 'bg-accent-subtle border-accent/30 text-accent'
+                  : 'bg-sunken border-edge/60 text-ink-muted',
+              ].join(' ')}
+            >
               {verifiedCount}
             </span>
           </button>
@@ -1049,14 +1056,21 @@ export function AdminDashboardPage() {
             type="button"
             onClick={() => setActiveTab('completed')}
             className={[
-              'flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold transition-colors',
+              'flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-medium transition-colors',
               activeTab === 'completed'
-                ? 'border-accent text-accent'
+                ? 'border-accent text-accent font-semibold'
                 : 'border-transparent text-ink-secondary hover:text-ink',
             ].join(' ')}
           >
             <span>All User Completed</span>
-            <span className="rounded-full bg-accent-subtle px-1.5 py-0.2 text-[10px] text-accent font-bold">
+            <span
+              className={[
+                'rounded-full px-1.5 py-0.2 text-[10px] font-medium border',
+                activeTab === 'completed'
+                  ? 'bg-accent-subtle border-accent/30 text-accent'
+                  : 'bg-sunken border-edge/60 text-ink-muted',
+              ].join(' ')}
+            >
               {completedCount}
             </span>
           </button>
@@ -1065,14 +1079,21 @@ export function AdminDashboardPage() {
             type="button"
             onClick={() => setActiveTab('all')}
             className={[
-              'flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold transition-colors',
+              'flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-medium transition-colors',
               activeTab === 'all'
-                ? 'border-accent text-accent'
+                ? 'border-accent text-accent font-semibold'
                 : 'border-transparent text-ink-secondary hover:text-ink',
             ].join(' ')}
           >
             <span>All Inventory</span>
-            <span className="rounded-full bg-edge/40 px-1.5 py-0.2 text-[10px] text-ink-muted font-bold">
+            <span
+              className={[
+                'rounded-full px-1.5 py-0.2 text-[10px] font-medium border',
+                activeTab === 'all'
+                  ? 'bg-accent-subtle border-accent/30 text-accent'
+                  : 'bg-sunken border-edge/60 text-ink-muted',
+              ].join(' ')}
+            >
               {totalCount}
             </span>
           </button>
@@ -1081,14 +1102,21 @@ export function AdminDashboardPage() {
             type="button"
             onClick={() => setActiveTab('users')}
             className={[
-              'flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold transition-colors',
+              'flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-medium transition-colors',
               activeTab === 'users'
-                ? 'border-accent text-accent'
+                ? 'border-accent text-accent font-semibold'
                 : 'border-transparent text-ink-secondary hover:text-ink',
             ].join(' ')}
           >
             <span>Cognito User Management</span>
-            <span className="rounded-full bg-accent-subtle px-1.5 py-0.2 text-[10px] text-accent font-bold">
+            <span
+              className={[
+                'rounded-full px-1.5 py-0.2 text-[10px] font-medium border',
+                activeTab === 'users'
+                  ? 'bg-accent-subtle border-accent/30 text-accent'
+                  : 'bg-sunken border-edge/60 text-ink-muted',
+              ].join(' ')}
+            >
               {managedUsers.length}
             </span>
           </button>
@@ -1097,14 +1125,21 @@ export function AdminDashboardPage() {
             type="button"
             onClick={() => setActiveTab('automated')}
             className={[
-              'flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold transition-colors',
+              'flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-medium transition-colors',
               activeTab === 'automated'
-                ? 'border-accent text-accent'
+                ? 'border-accent text-accent font-semibold'
                 : 'border-transparent text-ink-secondary hover:text-ink',
             ].join(' ')}
           >
             <span>Automated Repo Verification</span>
-            <span className="rounded-full bg-emerald-500/15 border border-emerald-500/25 px-1.5 py-0.2 text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">
+            <span
+              className={[
+                'rounded px-1.5 py-0.2 text-[10px] font-medium border',
+                activeTab === 'automated'
+                  ? 'bg-accent-subtle border-accent/30 text-accent'
+                  : 'bg-sunken border-edge/60 text-ink-muted',
+              ].join(' ')}
+            >
               GitHub CI
             </span>
           </button>
