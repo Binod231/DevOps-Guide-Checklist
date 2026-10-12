@@ -979,11 +979,23 @@ export function evaluateRepo(ctx: RepoContext, scannerMode: 'live_api' | 'ci_art
  * GitHub REST API Client (Live Scan)
  * ------------------------------------------------------------------ */
 
+export interface GitHubRateLimitInfo {
+  limit: number;
+  remaining: number;
+  resetEpoch: number;
+  resetDate: string;
+  minutesUntilReset: number;
+  used: number;
+}
+
 interface GitHubApiOptions {
   token?: string;
 }
 
-async function githubFetch<T>(url: string, options?: GitHubApiOptions): Promise<{ data: T | null; status: number; error?: string }> {
+async function githubFetch<T>(
+  url: string,
+  options?: GitHubApiOptions,
+): Promise<{ data: T | null; status: number; error?: string; rateLimit?: GitHubRateLimitInfo }> {
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github+json',
     'X-GitHub-Api-Version': '2022-11-28',
@@ -995,31 +1007,114 @@ async function githubFetch<T>(url: string, options?: GitHubApiOptions): Promise<
 
   try {
     const res = await fetch(url, { headers });
+
+    // Extract rate limit headers if present
+    const limitHeader = res.headers.get('x-ratelimit-limit');
+    const remainingHeader = res.headers.get('x-ratelimit-remaining');
+    const resetHeader = res.headers.get('x-ratelimit-reset');
+
+    let rateLimit: GitHubRateLimitInfo | undefined;
+    if (limitHeader && remainingHeader && resetHeader) {
+      const limit = Number(limitHeader) || 60;
+      const remaining = Number(remainingHeader) || 0;
+      const resetEpoch = Number(resetHeader) || 0;
+      const minutesUntilReset = resetEpoch ? Math.max(1, Math.ceil((resetEpoch * 1000 - Date.now()) / 60000)) : 0;
+      const resetDate = resetEpoch
+        ? new Date(resetEpoch * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : '';
+      rateLimit = {
+        limit,
+        remaining,
+        used: limit - remaining,
+        resetEpoch,
+        resetDate,
+        minutesUntilReset,
+      };
+    }
+
     if (!res.ok) {
       if (res.status === 401) {
-        return { data: null, status: res.status, error: 'Unauthorized: Invalid GitHub token.' };
+        return { data: null, status: res.status, error: 'Unauthorized: Invalid GitHub token.', rateLimit };
       }
       if (res.status === 404) {
         return {
           data: null,
           status: res.status,
           error: 'Not found: Repository is private or does not exist. A read-only token is required for private repositories.',
+          rateLimit,
         };
       }
       if (res.status === 403) {
+        if (rateLimit && rateLimit.remaining === 0) {
+          if (options?.token) {
+            return {
+              data: null,
+              status: res.status,
+              error: `GitHub API rate limit exceeded for this token (quota resets at ${rateLimit.resetDate}, in ~${rateLimit.minutesUntilReset} min).`,
+              rateLimit,
+            };
+          }
+          return {
+            data: null,
+            status: res.status,
+            error: `GitHub unauthenticated rate limit reached (60 req/hr limit for your IP). Quota resets at ${rateLimit.resetDate} (in ~${rateLimit.minutesUntilReset} min). Provide a free read-only GitHub Personal Access Token to get 5,000 requests/hr immediately, or load an instant demo audit below.`,
+            rateLimit,
+          };
+        }
         return {
           data: null,
           status: res.status,
           error: 'Forbidden: API rate limit exceeded or insufficient token permissions.',
+          rateLimit,
         };
       }
-      return { data: null, status: res.status, error: `GitHub API error (HTTP ${res.status}).` };
+      return { data: null, status: res.status, error: `GitHub API error (HTTP ${res.status}).`, rateLimit };
     }
+
     const data = (await res.json()) as T;
-    return { data, status: res.status };
+    return { data, status: res.status, rateLimit };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Network error connecting to GitHub API';
     return { data: null, status: 0, error: msg };
+  }
+}
+
+/**
+ * Checks the current remaining GitHub API rate limit for the client IP or token.
+ * Note: Querying the GitHub rate_limit endpoint does not consume core quota.
+ */
+export async function fetchGitHubRateLimit(token?: string): Promise<GitHubRateLimitInfo | null> {
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
+  if (token && token.trim()) {
+    headers.Authorization = `Bearer ${token.trim()}`;
+  }
+
+  try {
+    const res = await fetch('https://api.github.com/rate_limit', { headers });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { resources?: { core?: { limit: number; remaining: number; reset: number; used: number } } };
+    const core = json.resources?.core;
+    if (!core) return null;
+
+    const resetEpoch = Number(core.reset || 0);
+    const minutesUntilReset = resetEpoch ? Math.max(1, Math.ceil((resetEpoch * 1000 - Date.now()) / 60000)) : 0;
+    const resetDate = resetEpoch
+      ? new Date(resetEpoch * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : '';
+
+    return {
+      limit: core.limit,
+      remaining: core.remaining,
+      used: core.used,
+      resetEpoch,
+      resetDate,
+      minutesUntilReset,
+    };
+  } catch {
+    return null;
   }
 }
 
@@ -1039,6 +1134,9 @@ export async function fetchRepoContext(owner: string, repo: string, token?: stri
 
   // 2. Workflows
   const workflowsRes = await githubFetch<{ workflows?: RepoWorkflow[] }>(`${baseUrl}/actions/workflows`, { token });
+  if (workflowsRes.status === 403 && (workflowsRes.error?.includes('rate limit') || workflowsRes.rateLimit?.remaining === 0)) {
+    throw new Error(workflowsRes.error || 'GitHub rate limit reached while querying workflows.');
+  }
   const workflows: RepoWorkflow[] = workflowsRes.data?.workflows ?? [];
 
   // 3. Recent Action runs
@@ -1046,6 +1144,9 @@ export async function fetchRepoContext(owner: string, repo: string, token?: stri
     `${baseUrl}/actions/runs?per_page=10&branch=${encodeURIComponent(defaultBranch)}`,
     { token },
   );
+  if (runsRes.status === 403 && (runsRes.error?.includes('rate limit') || runsRes.rateLimit?.remaining === 0)) {
+    throw new Error(runsRes.error || 'GitHub rate limit reached while querying action runs.');
+  }
   const recentRuns: RepoRun[] = runsRes.data?.workflow_runs ?? [];
 
   // 4. File Tree (recursive)
@@ -1053,6 +1154,9 @@ export async function fetchRepoContext(owner: string, repo: string, token?: stri
     `${baseUrl}/git/trees/${encodeURIComponent(defaultBranch)}?recursive=1`,
     { token },
   );
+  if (treeRes.status === 403 && (treeRes.error?.includes('rate limit') || treeRes.rateLimit?.remaining === 0)) {
+    throw new Error(treeRes.error || 'GitHub rate limit reached while querying repository file tree.');
+  }
   const filePaths: string[] = (treeRes.data?.tree ?? []).map((t) => t.path);
 
   // 5. Branch Protection (requires admin:read permission)

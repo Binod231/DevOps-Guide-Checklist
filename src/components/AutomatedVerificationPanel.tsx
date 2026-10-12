@@ -1,11 +1,14 @@
-import { useState, useRef, type FormEvent, type ChangeEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent, type ChangeEvent } from 'react';
 import {
   runLiveGitHubAudit,
   parseCIEvidence,
   generateCIWorkflowYaml,
+  fetchGitHubRateLimit,
   type AutomatedAuditReport,
   type AutomatedCheckResult,
+  type GitHubRateLimitInfo,
 } from '../services/githubAudit';
+import { getSampleAuditReport } from '../services/sampleAuditReports';
 import { usePortalState } from '../state/PortalStateProvider';
 import { useAuth } from '../state/authContext';
 
@@ -23,6 +26,10 @@ export function AutomatedVerificationPanel() {
   const [isRunning, setIsRunning] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Quota & Rate Limit State
+  const [quota, setQuota] = useState<GitHubRateLimitInfo | null>(null);
+  const [isRefreshingQuota, setIsRefreshingQuota] = useState(false);
+
   // Import state
   const [jsonInput, setJsonInput] = useState('');
   const [importNotice, setImportNotice] = useState<string | null>(null);
@@ -34,6 +41,32 @@ export function AutomatedVerificationPanel() {
   const [copiedWorkflow, setCopiedWorkflow] = useState(false);
 
   const report: AutomatedAuditReport | null = latestAuditReport;
+
+  // Poll quota on mount & when token changes
+  useEffect(() => {
+    let isMounted = true;
+    fetchGitHubRateLimit(tokenInput.trim() || undefined).then((q) => {
+      if (isMounted) setQuota(q);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [tokenInput]);
+
+  const handleRefreshQuota = async () => {
+    setIsRefreshingQuota(true);
+    const q = await fetchGitHubRateLimit(tokenInput.trim() || undefined);
+    setQuota(q);
+    setIsRefreshingQuota(false);
+  };
+
+  const handleLoadSample = (sampleKey: 'portal' | 'fastify') => {
+    const sample = getSampleAuditReport(sampleKey);
+    saveAuditReport(sample);
+    setRepoInput(sample.repository);
+    setErrorMessage(null);
+    setAppliedNotice(null);
+  };
 
   const handleRunScan = async (e: FormEvent) => {
     e.preventDefault();
@@ -56,9 +89,13 @@ export function AutomatedVerificationPanel() {
     try {
       const generatedReport = await runLiveGitHubAudit(owner, repo, tokenInput.trim() || undefined);
       saveAuditReport(generatedReport);
+      // Refresh quota after scan
+      fetchGitHubRateLimit(tokenInput.trim() || undefined).then((q) => setQuota(q));
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error during scan';
       setErrorMessage(msg);
+      // Refresh quota on error as well
+      fetchGitHubRateLimit(tokenInput.trim() || undefined).then((q) => setQuota(q));
     } finally {
       setIsRunning(false);
     }
@@ -227,19 +264,50 @@ export function AutomatedVerificationPanel() {
                 placeholder="e.g. Binod231/DevOps-Guide-Checklist"
                 className="mt-1.5 w-full rounded-md border border-edge bg-sunken px-3 py-2 text-xs text-ink transition-colors focus:border-accent focus:bg-surface focus:outline-hidden"
               />
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                <span className="text-[11px] text-ink-muted">Try sample:</span>
+                <button
+                  type="button"
+                  onClick={() => handleLoadSample('portal')}
+                  className="inline-flex items-center rounded border border-edge bg-sunken px-2 py-0.5 text-[11px] font-medium text-ink hover:border-accent hover:bg-surface transition-colors"
+                >
+                  DevOps Guide Portal (88%)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleLoadSample('fastify')}
+                  className="inline-flex items-center rounded border border-edge bg-sunken px-2 py-0.5 text-[11px] font-medium text-ink hover:border-accent hover:bg-surface transition-colors"
+                >
+                  Fastify (75%)
+                </button>
+              </div>
             </div>
             <div>
               <div className="flex items-center justify-between">
                 <label htmlFor="token-input" className="block text-xs font-semibold uppercase tracking-wider text-ink-muted">
                   Personal Access Token (Read-Only)
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setShowToken(!showToken)}
-                  className="text-xs font-medium text-accent hover:underline"
-                >
-                  {showToken ? 'Hide' : 'Show'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <a
+                    href="https://github.com/settings/tokens/new?description=DevOps-Portal-Audit&scopes="
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-medium text-accent hover:underline inline-flex items-center gap-0.5"
+                  >
+                    <span>Get free token (5k/hr)</span>
+                    <svg className="size-3" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z" clipRule="evenodd" />
+                    </svg>
+                  </a>
+                  <span className="text-ink-muted">·</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowToken(!showToken)}
+                    className="text-xs font-medium text-ink-muted hover:text-ink"
+                  >
+                    {showToken ? 'Hide' : 'Show'}
+                  </button>
+                </div>
               </div>
               <input
                 id="token-input"
@@ -249,6 +317,22 @@ export function AutomatedVerificationPanel() {
                 placeholder="github_pat_... (Leave blank for public repositories)"
                 className="mt-1.5 w-full rounded-md border border-edge bg-sunken px-3 py-2 text-xs font-mono text-ink transition-colors focus:border-accent focus:bg-surface focus:outline-hidden"
               />
+              {quota && (
+                <div className="mt-1.5 flex items-center justify-between text-[11px]">
+                  <span className={`font-mono ${quota.remaining === 0 ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-ink-muted'}`}>
+                    GitHub Quota: {quota.remaining} / {quota.limit} remaining
+                    {quota.remaining === 0 && ` (Resets in ~${quota.minutesUntilReset} min at ${quota.resetDate})`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleRefreshQuota}
+                    disabled={isRefreshingQuota}
+                    className="text-ink-muted hover:text-ink transition-colors"
+                  >
+                    {isRefreshingQuota ? 'Checking...' : 'Check quota'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -374,8 +458,51 @@ export function AutomatedVerificationPanel() {
 
       {/* Errors or Notices */}
       {errorMessage && (
-        <div className="rounded-md border border-rose-300 bg-rose-50 p-4 text-xs font-medium text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
-          <strong>Audit notice:</strong> {errorMessage}
+        <div
+          role="alert"
+          className="rounded-lg border border-rose-300 bg-rose-50/90 p-4 text-xs text-rose-900 shadow-2xs dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200 space-y-3"
+        >
+          <div className="flex items-start gap-2.5">
+            <svg className="size-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+            </svg>
+            <div className="flex-1 space-y-1">
+              <h4 className="font-semibold text-rose-950 dark:text-rose-100">
+                {errorMessage.toLowerCase().includes('rate limit') ? 'GitHub API Rate Limit Reached' : 'Audit Notice'}
+              </h4>
+              <p className="leading-relaxed opacity-90">{errorMessage}</p>
+            </div>
+          </div>
+
+          {errorMessage.toLowerCase().includes('rate limit') && (
+            <div className="pt-2 border-t border-rose-200/80 dark:border-rose-900/50 flex flex-wrap items-center gap-2">
+              <a
+                href="https://github.com/settings/tokens/new?description=DevOps-Portal-Audit&scopes="
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-md border border-rose-300 bg-white px-3 py-1.5 font-semibold text-rose-900 shadow-2xs hover:bg-rose-50 dark:border-rose-800 dark:bg-rose-900/40 dark:text-rose-100 transition-colors"
+              >
+                <span>Create Free Token (5,000 req/hr)</span>
+                <svg className="size-3" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z" clipRule="evenodd" />
+                </svg>
+              </a>
+              <button
+                type="button"
+                onClick={() => handleLoadSample('fastify')}
+                className="inline-flex items-center rounded-md border border-edge bg-surface px-3 py-1.5 font-medium text-ink shadow-2xs hover:bg-sunken transition-colors"
+              >
+                Load Sample Fastify Report
+              </button>
+              <button
+                type="button"
+                onClick={() => handleLoadSample('portal')}
+                className="inline-flex items-center rounded-md border border-edge bg-surface px-3 py-1.5 font-medium text-ink shadow-2xs hover:bg-sunken transition-colors"
+              >
+                Load Sample DevOps Guide Report
+              </button>
+            </div>
+          )}
         </div>
       )}
 
