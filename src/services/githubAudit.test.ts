@@ -20,10 +20,25 @@ describe('githubAudit Service & Rule Engine', () => {
       'migrations/001_init.sql',
       'src/routes/health.ts',
       'docs/rollback.md',
+      'flagger.yaml',
+      'render.yaml',
+      'environments/staging/main.tf',
+      'environments/prod/main.tf',
+      'wrangler.toml',
+      'infracost.yml',
+      'vault.yaml',
+      'SECURITY.md',
+      'sentry.client.config.ts',
+      'pino.ts',
+      'metrics.ts',
+      'otel.ts',
+      'pagerduty.yaml',
+      'scripts/backup.sh',
     ],
     workflows: [
       { name: 'CI Pipeline', path: '.github/workflows/ci.yml', state: 'active' },
       { name: 'Container Scan', path: '.github/workflows/trivy.yml', state: 'active' },
+      { name: 'ECR Publish', path: '.github/workflows/ecr-login.yml', state: 'active' },
     ],
     recentRuns: [
       {
@@ -49,7 +64,8 @@ describe('githubAudit Service & Rule Engine', () => {
 
     expect(report.repository).toBe('test-org/test-repo');
     expect(report.scannerMode).toBe('live_api');
-    expect(report.passedCount).toBeGreaterThanOrEqual(8);
+    expect(report.totalEvaluated).toBe(24);
+    expect(report.passedCount).toBeGreaterThanOrEqual(20);
     expect(report.failedCount).toBe(0);
     expect(report.scorePercentage).toBeGreaterThanOrEqual(80);
 
@@ -69,9 +85,13 @@ describe('githubAudit Service & Rule Engine', () => {
     expect(st07?.status).toBe('pass');
     expect(st07?.evidence).toContain('main.tf');
 
-    const st10 = report.results.find((r) => r.id === 'ST-10');
+    const st10 = report.results.find((r) => r.rowKey === 'st-10--testing-quality');
     expect(st10?.status).toBe('pass');
     expect(st10?.evidence).toContain('app.test.ts');
+
+    const st23 = report.results.find((r) => r.id === 'ST-23');
+    expect(st23?.status).toBe('pass');
+    expect(st23?.summary).toContain('Automated database backup');
   });
 
   it('fails controls when branch protection and CI workflows are missing', () => {
@@ -92,7 +112,7 @@ describe('githubAudit Service & Rule Engine', () => {
     const st02 = report.results.find((r) => r.id === 'ST-02');
     expect(st02?.status).toBe('fail');
 
-    const st10 = report.results.find((r) => r.id === 'ST-10');
+    const st10 = report.results.find((r) => r.rowKey === 'st-10--testing-quality');
     expect(st10?.status).toBe('fail');
   });
 

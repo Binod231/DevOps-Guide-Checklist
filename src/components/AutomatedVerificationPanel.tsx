@@ -487,7 +487,7 @@ export function AutomatedVerificationPanel() {
           {/* Itemized Results Cards */}
           <div className="divide-y divide-edge rounded-md border border-edge bg-surface">
             {filteredResults.map((item) => (
-              <div key={item.id} className="p-4 transition-colors hover:bg-sunken/30">
+              <div key={item.rowKey || item.id} className="p-4 transition-colors hover:bg-sunken/30">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded bg-sunken border border-edge px-1.5 py-0.5 font-mono text-[11px] font-semibold text-ink-secondary">

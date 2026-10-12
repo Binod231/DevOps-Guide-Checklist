@@ -108,6 +108,7 @@ export interface AuditRule {
 }
 
 export const AUDIT_RULES: AuditRule[] = [
+  /* ---------------- SCM & CI/CD (ST-01 to ST-05) ---------------- */
   {
     id: 'ST-01',
     practiceId: 'branch-protections-single-pr-approvals',
@@ -289,7 +290,6 @@ export const AUDIT_RULES: AuditRule[] = [
         };
       }
 
-      // Check for ORM or migration config files
       const hasOrmConfig = ctx.filePaths.some((p) =>
         /(prisma\/schema\.prisma|drizzle\.config|alembic\.ini|knexfile|flyway\.conf)/i.test(p),
       );
@@ -306,6 +306,76 @@ export const AUDIT_RULES: AuditRule[] = [
         status: 'warn',
         summary: 'No database migration directory or ORM migration configuration identified.',
         evidence: 'If this service does not use a relational database, this gate may be marked as N/A or verified manually.',
+      };
+    },
+  },
+  {
+    id: 'ST-05',
+    practiceId: 'progressive-delivery-canary-deployments-optional-for-startup',
+    rowKey: 'st-05--scm-ci-cd',
+    title: 'Progressive Delivery & Canary Deployments',
+    category: 'SCM & CI/CD',
+    verificationGate: 'Deploy a release configured to route 10% of traffic to a canary build; verify automated rollback triggers on failure.',
+    evaluate: (ctx) => {
+      const progressiveFiles = ctx.filePaths.filter((p) =>
+        /(rollout\.ya?ml$)|(flagger\.ya?ml$)|(launchdarkly)|(unleash)|(flagsmith)|(openfeature)|(statsig)/i.test(p),
+      );
+      const hasCanaryWorkflow = ctx.workflows.some((w) =>
+        /canary|blue-green|progressive|rollout/i.test(w.name + ' ' + w.path),
+      );
+
+      if (progressiveFiles.length > 0 || hasCanaryWorkflow) {
+        return {
+          status: 'pass',
+          summary: 'Progressive delivery / feature flagging configuration detected.',
+          evidence: `Identified progressive delivery assets: ${[...progressiveFiles, ...(hasCanaryWorkflow ? ['CI Canary Workflow'] : [])].slice(0, 3).join(', ')}.`,
+        };
+      }
+
+      return {
+        status: 'warn',
+        summary: 'No progressive delivery or feature flagging configuration identified in repository.',
+        evidence: 'Optional for early startups; recommended when managing high-traffic services via Argo Rollouts, Flagger, or LaunchDarkly.',
+      };
+    },
+  },
+
+  /* ---------------- Infrastructure (ST-06 to ST-10) ---------------- */
+  {
+    id: 'ST-06',
+    practiceId: 'managed-application-platforms',
+    rowKey: 'st-06--infrastructure',
+    title: 'Managed Application Platforms',
+    category: 'Infrastructure',
+    verificationGate: 'Managed PaaS/container platform handles scaling, TLS certificates, and process supervision automatically.',
+    evaluate: (ctx) => {
+      const paasFiles = ctx.filePaths.filter((p) =>
+        /(render\.ya?ml$)|(fly\.toml$)|(railway\.json$)|(^Procfile$)|(app\.json$)|(apprunner\.ya?ml$)|(vercel\.json$)|(netlify\.toml$)|(serverless\.ya?ml$)|(task-definition\.json$)|(^copilot\/)/i.test(
+          p,
+        ),
+      );
+
+      if (paasFiles.length > 0) {
+        return {
+          status: 'pass',
+          summary: `Managed application platform configuration verified (${paasFiles.join(', ')}).`,
+          evidence: `Detected PaaS/container platform definition: ${paasFiles[0]}.`,
+        };
+      }
+
+      const hasContainer = ctx.filePaths.some((p) => /(Dockerfile|compose\.ya?ml)/i.test(p));
+      if (hasContainer) {
+        return {
+          status: 'pass',
+          summary: 'Standardized container definition verified for deployment to managed platforms.',
+          evidence: 'Dockerfile or container specification ready for managed platforms (Cloud Run, ECS, Render, Fly.io).',
+        };
+      }
+
+      return {
+        status: 'warn',
+        summary: 'No managed application platform configuration or Dockerfile detected.',
+        evidence: 'Consider adopting a managed container or PaaS platform (Render, Fly.io, AWS App Runner, Cloud Run) to automate TLS and scaling.',
       };
     },
   },
@@ -339,6 +409,94 @@ export const AUDIT_RULES: AuditRule[] = [
       };
     },
   },
+  {
+    id: 'ST-08',
+    practiceId: 'isolated-staging-production-environments-staging-env-is-optional-for-the-startup-or-small-company',
+    rowKey: 'st-08--infrastructure',
+    title: 'Isolated Staging & Production Environments',
+    category: 'Infrastructure',
+    verificationGate: 'Staging environment is isolated from production database and credentials.',
+    evaluate: (ctx) => {
+      const envFiles = ctx.filePaths.filter((p) =>
+        /(staging|prod(uction)?)/i.test(p),
+      );
+
+      const hasMultiEnvDeploy = ctx.workflows.some((w) =>
+        /staging.*prod|deploy/i.test(w.name + ' ' + w.path),
+      );
+
+      if (envFiles.length >= 2 || (envFiles.length > 0 && hasMultiEnvDeploy)) {
+        return {
+          status: 'pass',
+          summary: 'Segregated staging and production environment definitions identified.',
+          evidence: `Found environment assets: ${envFiles.slice(0, 4).join(', ')}.`,
+        };
+      }
+
+      return {
+        status: 'warn',
+        summary: 'Explicit staging vs. production environment isolation files not identified in repository.',
+        evidence: 'Optional for pre-launch startups; recommended as team grows to isolate staging and production databases/keys.',
+      };
+    },
+  },
+  {
+    id: 'ST-09',
+    practiceId: 'edge-security-waf-ingress-rate-limiting-optional-for-startup',
+    rowKey: 'st-09--infrastructure',
+    title: 'Edge Security, WAF & Ingress Rate Limiting',
+    category: 'Infrastructure',
+    verificationGate: 'Automated script exceeding request threshold against API endpoint returns HTTP 429 Too Many Requests.',
+    evaluate: (ctx) => {
+      const edgeFiles = ctx.filePaths.filter((p) =>
+        /(wrangler\.toml$)|(cloudflare)|(aws_waf)|(waf.*\.tf$)|(rate[-_]?limit)|(nginx.*\.conf$)/i.test(p),
+      );
+
+      if (edgeFiles.length > 0) {
+        return {
+          status: 'pass',
+          summary: 'Edge security, WAF, or rate limiting configuration detected.',
+          evidence: `Found rate-limiting / edge security assets: ${edgeFiles.slice(0, 3).join(', ')}.`,
+        };
+      }
+
+      return {
+        status: 'warn',
+        summary: 'No edge WAF or application rate limiting configuration detected.',
+        evidence: 'Configure Cloudflare WAF, AWS WAF, or ingress rate-limiting middleware to protect APIs from abuse.',
+      };
+    },
+  },
+  {
+    id: 'ST-10',
+    practiceId: 'cloud-finops-guardrails-budget-ceilings',
+    rowKey: 'st-10--infrastructure',
+    title: 'Cloud FinOps Guardrails & Budget Ceilings',
+    category: 'Infrastructure',
+    verificationGate: 'Cloud billing budget ceiling configured with alert triggers when spend approaches threshold.',
+    evaluate: (ctx) => {
+      const finopsFiles = ctx.filePaths.filter((p) =>
+        /(infracost)|(budget.*\.tf$)|(billing.*\.tf$)|(cost[-_]?guard)/i.test(p),
+      );
+      const hasInfracostWorkflow = ctx.workflows.some((w) => /infracost|cost/i.test(w.name + ' ' + w.path));
+
+      if (finopsFiles.length > 0 || hasInfracostWorkflow) {
+        return {
+          status: 'pass',
+          summary: 'Cloud FinOps budget ceilings or Infracost CI guardrails detected.',
+          evidence: `Identified cost management tooling: ${[...finopsFiles, ...(hasInfracostWorkflow ? ['Infracost CI Workflow'] : [])].join(', ')}.`,
+        };
+      }
+
+      return {
+        status: 'warn',
+        summary: 'No automated FinOps budget ceiling or Infracost pull-request cost estimate found.',
+        evidence: 'Configure AWS/GCP Budget alerts and Infracost in CI to prevent unexpected cloud bill spikes.',
+      };
+    },
+  },
+
+  /* ---------------- Testing & Quality (ST-10 to ST-11) ---------------- */
   {
     id: 'ST-10',
     practiceId: 'automated-core-integration-api-tests',
@@ -413,6 +571,44 @@ export const AUDIT_RULES: AuditRule[] = [
       };
     },
   },
+
+  /* ---------------- Security (ST-12 to ST-15) ---------------- */
+  {
+    id: 'ST-12',
+    practiceId: 'centralized-secret-environment-variable-management-implement-in-startup-if-they-want-more-security',
+    rowKey: 'st-12--security',
+    title: 'Centralized Secret & Env Var Management',
+    category: 'Security',
+    verificationGate: 'No real production secrets in repositories; centralized secrets vault or KMS utilized.',
+    evaluate: (ctx) => {
+      const secretFiles = ctx.filePaths.filter((p) =>
+        /(vault\.ya?ml$)|(doppler)|(infisical)|(\.sops\.ya?ml$)|(secretsmanager)|(ssm_parameter)|(SealedSecret)/i.test(p),
+      );
+      const hasUncheckedRawEnv = ctx.filePaths.some((p) => /^\.env$/i.test(p));
+
+      if (secretFiles.length > 0 && !hasUncheckedRawEnv) {
+        return {
+          status: 'pass',
+          summary: 'Centralized secret management tooling identified.',
+          evidence: `Found secret management integration: ${secretFiles.slice(0, 3).join(', ')}.`,
+        };
+      }
+
+      if (secretFiles.length > 0 && hasUncheckedRawEnv) {
+        return {
+          status: 'warn',
+          summary: 'Secret management tool present, but a root .env file was committed.',
+          evidence: 'Ensure .env is added to .gitignore and only .env.example is committed.',
+        };
+      }
+
+      return {
+        status: 'warn',
+        summary: 'No centralized secret manager (AWS Secrets Manager, Vault, Doppler, SOPS) detected.',
+        evidence: 'Never commit secrets to git; manage production credentials using a dedicated secrets service.',
+      };
+    },
+  },
   {
     id: 'ST-13',
     practiceId: 'automated-container-binary-vulnerability-scanning',
@@ -450,6 +646,116 @@ export const AUDIT_RULES: AuditRule[] = [
     },
   },
   {
+    id: 'ST-14',
+    practiceId: 'enforced-two-factor-authentication',
+    rowKey: 'st-14--security',
+    title: 'Enforced Two-Factor Authentication (2FA)',
+    category: 'Security',
+    verificationGate: 'Verify 2FA enforcement across critical SaaS developer and cloud accounts.',
+    evaluate: (ctx) => {
+      const hasSecurityDoc = ctx.filePaths.some((p) =>
+        /(^SECURITY\.md$)|(^docs\/security\.md$)|(\.github\/SECURITY\.md$)/i.test(p),
+      );
+
+      if (hasSecurityDoc) {
+        return {
+          status: 'pass',
+          summary: 'Repository security policy and access guidelines documented.',
+          evidence: 'Security policy (SECURITY.md) verified.',
+        };
+      }
+
+      return {
+        status: 'warn',
+        summary: 'Security policy file (SECURITY.md) not found.',
+        evidence: 'Enforce 2FA/MFA in GitHub Organization settings and document security policies in SECURITY.md.',
+      };
+    },
+  },
+  {
+    id: 'ST-15',
+    practiceId: 'secure-container-registries-access-control',
+    rowKey: 'st-15--security',
+    title: 'Secure Container Registries & Access Control',
+    category: 'Security',
+    verificationGate: 'Container registry requires authentication; images signed and immutable tags enforced.',
+    evaluate: (ctx) => {
+      const registryWorkflows = ctx.workflows.filter((w) =>
+        /ecr|docker|login|registry|cosign|publish|image/i.test(w.name + ' ' + w.path),
+      );
+
+      if (registryWorkflows.length > 0) {
+        return {
+          status: 'pass',
+          summary: `Secure container registry / image publishing workflow detected (${registryWorkflows.length} workflow(s)).`,
+          evidence: `Found registry workflows: ${registryWorkflows.map((w) => w.name).slice(0, 3).join(', ')}.`,
+        };
+      }
+
+      return {
+        status: 'warn',
+        summary: 'No container registry authentication or image publishing workflow found.',
+        evidence: 'Use authenticated registries (AWS ECR, GHCR, Google Artifact Registry) with scoped IAM access.',
+      };
+    },
+  },
+
+  /* ---------------- Observability (ST-16 to ST-21) ---------------- */
+  {
+    id: 'ST-16',
+    practiceId: 'centralized-application-exception-tracking',
+    rowKey: 'st-16--observability',
+    title: 'Centralized Application Exception Tracking',
+    category: 'Observability',
+    verificationGate: 'Controlled staging error must generate an alert in exception tracker.',
+    evaluate: (ctx) => {
+      const exceptionFiles = ctx.filePaths.filter((p) =>
+        /(sentry)|(bugsnag)|(rollbar)|(honeybadger)|(raygun)/i.test(p),
+      );
+
+      if (exceptionFiles.length > 0) {
+        return {
+          status: 'pass',
+          summary: 'Centralized exception tracking SDK configuration detected.',
+          evidence: `Found exception monitoring assets: ${exceptionFiles.slice(0, 3).join(', ')}.`,
+        };
+      }
+
+      return {
+        status: 'warn',
+        summary: 'No centralized exception tracking SDK (Sentry, Bugsnag, Rollbar) identified in repository.',
+        evidence: 'Integrate Sentry or an equivalent error reporting service to automatically alert on uncaught production exceptions.',
+      };
+    },
+  },
+  {
+    id: 'ST-17',
+    practiceId: 'structured-log-aggregation-search',
+    rowKey: 'st-17--observability',
+    title: 'Structured Log Aggregation & Search',
+    category: 'Observability',
+    verificationGate: 'Search by request_id and correlate logs across distributed services.',
+    evaluate: (ctx) => {
+      const loggingFiles = ctx.filePaths.filter((p) =>
+        /(pino)|(winston)|(serilog)|(zap)|(logrus)|(fluent-?bit)|(vector\.toml$)|(logstash)/i.test(p),
+      );
+
+      if (loggingFiles.length > 0) {
+        return {
+          status: 'pass',
+          summary: 'Structured JSON logging configuration identified in repository.',
+          evidence: `Found structured logging configs/tools: ${loggingFiles.slice(0, 3).join(', ')}.`,
+        };
+      }
+
+      return {
+        status: 'warn',
+        summary: 'No structured logging configuration identified in repository.',
+        evidence: 'Format server and API logs as structured JSON containing timestamp, level, and request_id for indexing.',
+      };
+    },
+  },
+  {
     id: 'ST-18',
     practiceId: 'uptime-monitoring-basic-paging-alerts',
     rowKey: 'st-18--observability',
@@ -472,7 +778,6 @@ export const AUDIT_RULES: AuditRule[] = [
         };
       }
 
-      // Check if K8s manifests define probes
       const hasProbes = ctx.filePaths.some((p) => /(deployment|service|pod).*\.ya?ml$/i.test(p));
       if (hasProbes) {
         return {
@@ -489,6 +794,89 @@ export const AUDIT_RULES: AuditRule[] = [
       };
     },
   },
+  {
+    id: 'ST-19',
+    practiceId: 'golden-signals-slis-slo-tracking',
+    rowKey: 'st-19--observability',
+    title: 'Golden Signals, SLIs & SLO Tracking',
+    category: 'Observability',
+    verificationGate: 'Latency, traffic, errors, and saturation tracked; p99 latency alert triggers on database latency.',
+    evaluate: (ctx) => {
+      const metricsFiles = ctx.filePaths.filter((p) =>
+        /(prom-client)|(prometheus)|(\/metrics)|(grafana)|(alertmanager)|(sloth)|(pyrra)/i.test(p),
+      );
+
+      if (metricsFiles.length > 0) {
+        return {
+          status: 'pass',
+          summary: 'Metrics exposition / Golden Signals monitoring assets identified.',
+          evidence: `Found metrics and alerting definitions: ${metricsFiles.slice(0, 3).join(', ')}.`,
+        };
+      }
+
+      return {
+        status: 'warn',
+        summary: 'No Prometheus metrics endpoint, Grafana dashboard, or Golden Signals SLI/SLO configs detected.',
+        evidence: 'Track the four Golden Signals (latency, traffic, errors, saturation) and alert on p99 degradation.',
+      };
+    },
+  },
+  {
+    id: 'ST-20',
+    practiceId: 'distributed-apm-opentelemetry-tracing',
+    rowKey: 'st-20--observability',
+    title: 'Distributed APM & OpenTelemetry Tracing',
+    category: 'Observability',
+    verificationGate: 'Complete end-to-end trace waterfall visible in tracing dashboard.',
+    evaluate: (ctx) => {
+      const traceFiles = ctx.filePaths.filter((p) =>
+        /(opentelemetry)|(otel)|(dd-trace)|(jaeger)|(zipkin)|(newrelic)/i.test(p),
+      );
+
+      if (traceFiles.length > 0) {
+        return {
+          status: 'pass',
+          summary: 'Distributed tracing / OpenTelemetry APM instrumentation detected.',
+          evidence: `Found APM/tracing assets: ${traceFiles.slice(0, 3).join(', ')}.`,
+        };
+      }
+
+      return {
+        status: 'warn',
+        summary: 'Distributed tracing (OpenTelemetry / Datadog / New Relic) not detected in repository.',
+        evidence: 'Instrument service with OpenTelemetry SDK to trace requests across microservices.',
+      };
+    },
+  },
+  {
+    id: 'ST-21',
+    practiceId: 'on-call-rotation-and-incident-routing-optional-for-startups',
+    rowKey: 'st-21--observability',
+    title: 'On-Call Rotation & Incident Routing',
+    category: 'Observability',
+    verificationGate: 'Trigger a critical alert outside working hours; confirm it pages designated on-call engineer.',
+    evaluate: (ctx) => {
+      const oncallDocs = ctx.filePaths.filter((p) =>
+        /(pagerduty)|(opsgenie)|(incident[-_]?response)|(on[-_]?call)|(runbook)/i.test(p),
+      );
+
+      if (oncallDocs.length > 0) {
+        return {
+          status: 'pass',
+          summary: 'On-call rotation tooling or incident response runbook detected.',
+          evidence: `Found incident response assets: ${oncallDocs.slice(0, 3).join(', ')}.`,
+        };
+      }
+
+      return {
+        status: 'warn',
+        summary: 'No on-call rotation tooling (PagerDuty / Opsgenie) or incident response documentation detected.',
+        evidence: 'Define on-call schedules and alert routing in PagerDuty or Opsgenie.',
+      };
+    },
+  },
+
+  /* ---------------- Disaster Recovery (ST-22 to ST-23) ---------------- */
   {
     id: 'ST-22',
     practiceId: 'documented-rollback-procedure-one-click-reverts',
@@ -514,6 +902,33 @@ export const AUDIT_RULES: AuditRule[] = [
         status: 'warn',
         summary: 'No explicit rollback procedure or runbook markdown file identified in repository.',
         evidence: 'Add a docs/rollback.md or RUNBOOK.md detailing step-by-step restoration procedures.',
+      };
+    },
+  },
+  {
+    id: 'ST-23',
+    practiceId: 'automated-database-backups-point-in-time-recovery',
+    rowKey: 'st-23--disaster-recovery',
+    title: 'Automated Database Backups & Point-in-Time Recovery',
+    category: 'Disaster Recovery',
+    verificationGate: 'Complete a restore drill and verify backup integrity with Point-in-Time Recovery.',
+    evaluate: (ctx) => {
+      const backupFiles = ctx.filePaths.filter((p) =>
+        /(backup)|(pg_dump)|(mongodump)|(velero)|(snapshot.*\.tf$)/i.test(p),
+      );
+
+      if (backupFiles.length > 0) {
+        return {
+          status: 'pass',
+          summary: 'Automated database backup or restore automation detected.',
+          evidence: `Found backup scripts/IaC rules: ${backupFiles.slice(0, 3).join(', ')}.`,
+        };
+      }
+
+      return {
+        status: 'warn',
+        summary: 'Automated database backup and PITR definitions not explicitly identified in repository.',
+        evidence: 'Ensure managed databases (RDS, Cloud SQL, DynamoDB) have daily automated snapshots and PITR enabled.',
       };
     },
   },
